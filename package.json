@@ -1,6 +1,6 @@
 {
   "name": "wm-sspa-cli",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A CLI to convert WaveMaker apps to Single-Spa compatible apps",
   "main": "index.js",
   "scripts": {
@@ -11,8 +11,8 @@
     "CLI",
     "Single-spa"
   ],
-  "bin":{
-    "wm-sspa-cli":"./index.js"
+  "bin": {
+    "wm-sspa-cli": "./index.js"
   },
   "author": "subodh.kumar@wavemaker.com",
   "license": "ISC",
@@ -21,6 +21,8 @@
     "clear": "^0.1.0",
     "figlet": "^1.2.4",
     "inquirer": "^7.0.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5"
   }
 }

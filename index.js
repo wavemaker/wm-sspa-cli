@@ -5,16 +5,20 @@ const clear = require("clear");
 const figlet = require("figlet");
 const inquirer = require("./inquirer");
 const parseArgs = require("minimist");
+
+const util = require("util");
+const requestp = require("request-promise");
 clear();
 console.log(
-  chalk.blueBright(figlet.textSync("WaveMaker", { horizontalLayout: "full" }))
+  chalk.blue(figlet.textSync("WaveMaker", { horizontalLayout: "full" }))
 );
+
 const printCliHelp = () => {
   console.log(
-    chalk.blueBright(
+    chalk.blue(
       `*       A CLI to convert WaveMaker App to Single-Spa compatible App      *`
     ),
-    chalk.blueBright(`\n\n##### USAGE EXAMPLE #####`),
+    chalk.blue(`\n\n##### USAGE EXAMPLE #####`),
     chalk.white(
       `\n#1. <command> --project-path <FULL_PATH_OF_WM_PROJECT> --deploy-url <WM_APP_DEPLOYED_URL>`
     ),
@@ -26,16 +30,32 @@ const printCliHelp = () => {
   );
 };
 printCliHelp();
-const argv = parseArgs(process.argv.slice(2));
+let argv = parseArgs(process.argv.slice(2));
 if (argv["help"] || argv["h"]) {
   printCliHelp();
 } else {
   (async () => {
     if (!argv["project-path"] && !argv["p"]) {
-      console.log(await inquirer.getProjectPath());
+      argv = { ...argv, ...(await inquirer.getProjectPath()) };
+      console.log(argv);
+    } else if (!inquirer.isValidPath(argv["project-path"] || argv["p"])) {
+      console.log(
+        chalk.red(
+          `ERROR | Invalid WaveMaker project path \n"${PROJECT_PATH}"\n`
+        )
+      );
     }
     if (!argv["deploy-url"] && !argv["d"]) {
-      console.log(await inquirer.getDeployedUrl());
+      argv = { ...argv, ...(await inquirer.getDeployedUrl()) };
+      console.log(argv);
+    } else if (!(await inquirer.isValidURL(argv["deploy-url"] || argv["d"]))) {
+      console.log(
+        chalk.red(`ERROR | Invalid WaveMaker Deploy url \n"${PROJECT_PATH}"\n`)
+      );
     }
+
+    const PROJECT_PATH = argv["project-path"] || argv["p"];
+    const DEPLOY_URL = argv["deploy-url"] || argv["d"];
+    console.log(chalk.green(`### START #####`));
   })();
 }
