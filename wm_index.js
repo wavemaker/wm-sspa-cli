@@ -91,7 +91,7 @@ const printResult = path => {
     chalk.whiteBright(
       `\nArtifacts are generated at: `
     ),
-    chalk.bgWhiteBright(` ${getBundlePath(path)} \n\n`)
+    chalk.bgWhiteBright.black(` ${getBundlePath(path)} \n\n`)
   );
 };
 
