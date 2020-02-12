@@ -37,7 +37,7 @@ const wmReplJs = require("./wm_replace_angular");
 const wmPrepApp = require("./wm_prepare_app");
 
 const getGeneratedApp = path => `${path}/generated-angular-app`;
-const getBundlePath = path => `${path}/wmsspa`;
+const getBundlePath = path => `${path}/wm-sspa`;
 
 const showResult = ({ stdout, stderr }) => {
   return;
@@ -58,7 +58,7 @@ const restoreBackup = path => {
   fs.renameSync(backupPath, cleanupPath);
 };
 const createBundleFolder = path => {
-  const bundlePath = path + "/wm-sspa";
+  const bundlePath = getBundlePath(path);
   rimraf.sync(bundlePath);
   fs.mkdirSync(bundlePath);
 };
