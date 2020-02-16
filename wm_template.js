@@ -2405,7 +2405,7 @@ export class AppRoutingModule{};
 export class WMInterceptor implements HttpInterceptor {
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
         // const baseUrl = 'http://localhost:8080/wmapp/';
-        return next.handle(request.clone({url:"+deployUrl+request.url+"}))
+        return next.handle(request.clone({url:deployUrl+'/'+request.url}))
     }
 }
 

@@ -3,6 +3,7 @@ const wmTemplate = require("./wm_template");
 
 const getPagesConfigPath = path =>
   path ? path + `/src/main/webapp/pages/pages-config.json` : "";
+// const {getGeneratedApp} = require("./wm_utils");
 const getRoutePath = path => path + "/generated-angular-app/src/app";
 const getRouteFile = () => `/app.routes.ts`;
 const getSspaRouteFile = () => `/sspa_app.routes.ts`;

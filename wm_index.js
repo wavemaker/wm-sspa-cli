@@ -12,37 +12,22 @@
  * Copy Main to Bundle Folder
  */
 const fs = require("fs");
-const project_path = () => process.env.PROJECT_PATH || "";
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
-
-const CLI = require("clui");
-const Spinner = CLI.Spinner;
-const chalk = require("chalk");
-// ['◜','◠','◝','◞','◡','◟'];
-const countdown = new Spinner("Initiating...  ", [
-  "⣾",
-  "⣽",
-  "⣻",
-  "⢿",
-  "⡿",
-  "⣟",
-  "⣯",
-  "⣷"
-]);
+const { updateStatus, printSuccess } = require("./wm_cli_util");
 
 const wmReplJs = require("./wm_replace_angular");
 const wmPrepApp = require("./wm_prepare_app");
 
-const getGeneratedApp = path => `${path}/generated-angular-app`;
-const getBundlePath = path => `${path}/wm-sspa`;
+const {getGeneratedApp, getBundlePath} = require("./wm_utils");
+
 
 const showResult = ({ stdout, stderr }) => {
   return;
-  stdout && console.log(chalk.grey(stdout));
-  stderr && console.error(chalk.red(stderr));
+  // stdout && console.log(chalk.grey(stdout));
+  // stderr && console.error(chalk.red(stderr));
 };
 const backUpGenNgApp = async path => {
   const backupPath = `${path}/wm-ng-app`;
@@ -85,56 +70,46 @@ const delSspaEmptyComp = path => {
   rimraf.sync(compPath);
 };
 
-const printResult = path => {
-  console.log(
-    chalk.green(`wm-sspa-cli:Generated Single-Spa artifacts successfully!`),
-    chalk.whiteBright(
-      `\nArtifacts are generated at: `
-    ),
-    chalk.bgWhiteBright.black(` ${getBundlePath(path)} \n\n`)
-  );
+const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
+  let res;
+  updateStatus(`Preparing Backup               `);
+  await backUpGenNgApp(projectPath);
+
+  updateStatus(`Preparing Bundle Folder        `);
+  createBundleFolder(projectPath);
+
+  updateStatus(`Setup Angular Build            `);
+  await wmReplJs.replaceAngularJson(projectPath);
+
+  updateStatus(`Building the Project           `);
+  res = await exec(buildNgApp(projectPath));
+  // verbose && showResult(res);
+  updateStatus(`Copying Styles                 `);
+  await copyStyles(projectPath);
+
+  updateStatus(`Copying Scripts                `);
+  await copyScripts(projectPath);
+
+  updateStatus(`Updating WaveMaker App         `);
+  await wmPrepApp.prepareApp(projectPath, deployUrl);
+
+  updateStatus(`Adding Single-spa schematics   `);
+  res = await exec(addSspa(projectPath));
+  delSspaEmptyComp(projectPath);
+  // verbose && showResult(res);
+
+  updateStatus(`Building for Single-Spa       `);
+  res = await exec(buildSspaApp(projectPath));
+  // verbose && showResult(res);
+
+  updateStatus(`Copying Final Files          `);
+  await copyMain(projectPath);
+
+  updateStatus(`Resetting the Project        `);
+  restoreBackup(projectPath); 
+
+  printSuccess(`Artifacts are generated at: ${getBundlePath(projectPath)}`);
 };
-
 module.exports = {
-  generateSspaBundle: async (projectPath, deployUrl, verbose) => {
-    try {
-      let res;
-      countdown.start();
-      countdown.message(`Preparing Backup               `);
-      await backUpGenNgApp(projectPath);
-      countdown.message(`Preparing Bundle Folder        `);
-      createBundleFolder(projectPath);
-      countdown.message(`Setup Angular Build            `);
-      await wmReplJs.replaceAngularJson(projectPath);
-      countdown.message(`Building the Project           `);
-      res = await exec(buildNgApp(projectPath));
-      verbose && showResult(res);
-      countdown.message(`Copying Styles                 `);
-      await copyStyles(projectPath);
-      countdown.message(`Copying Scripts                `);
-      await copyScripts(projectPath);
-
-      countdown.message(`Updating WaveMaker App         `);
-      await wmPrepApp.prepareApp(projectPath, deployUrl);
-
-      countdown.message(`Adding Single-spa schematics   `);
-      res = await exec(addSspa(projectPath));
-      verbose && showResult(res);
-      delSspaEmptyComp(projectPath);
-
-      countdown.message(`Building for Single-Spa       `);
-      res = await exec(buildSspaApp(projectPath));
-      verbose && showResult(res);
-
-      countdown.message(`Copying Final Files          `);
-      await copyMain(projectPath);
-      countdown.message(`Resetting the Project        `);
-      restoreBackup(projectPath);
-      countdown.stop();
-
-      printResult(projectPath);
-    } catch (e) {
-      console.log(chalk.red(` EXCEPTION | ${e}`));
-    }
-  }
+  generateSspaBundle
 };
