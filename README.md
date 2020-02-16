@@ -1,40 +1,41 @@
 # wm-sspa-cli
 A CLI to convert [**WaveMaker**](https://www.wavemakeronline.com/) apps to [**Single-spa**](https://single-spa.js.org/) compatible app
 
+## Installation
+### **npx**
+Run the command directly without installation 
+
+>`npx wm-sspa-cli`
+
+### **npm**
+
+Install the CLI globally 
+
+>`npm install wm-sspa-cli `
+
+and call the CLI 
+
+>`wm-sspa-cli`
+
 ## Usage
-## **npx** 
-Run directly with npx. The CLI will prompt the user to enter WaveMaker exported Project Path & deployed URL
-> `npx wm-sspa-cli`
+![Screenshot](https://imgur.com/HmBtEXG)
 
-Or
-> `npx wm-sspa-cli --project-path <WM_PROJECT_PATH> --deploy-url <WM_DEPLOYED_URL>`
+The CLI requires & prompts the user for WaveMaker project path(Exported from WaveMaker) & Deployed URL of the application.
 
-Or
-> `npx wm-sspa-cli -p <WM_PROJECT_PATH> -d <WM_DEPLOYED_URL>`
-
-<!-- **Note:** Pptionally you can enable more details using `--verbose` option -->
-
-## **npm** 
-Install the CLI with the following command
->  `npm i wm-sspa-cli`
-
-and use as listed below
-
-> `wm-sspa-cli` 
-
-Or
-> `wm-sspa-cli --project-path <WM_PROJECT_PATH> --deploy-url <WM_DEPLOYED_URL>`
-
-Or 
-> `wm-sspa-cli -p <WM_PROJECT_PATH> -d <WM_DEPLOYED_URL>`
+The CLI can optionally take them as paramaters,
+* `-p | --project-path`
+* `-d | --deploy-url`
 
 
-## Sample Code
+
+### **npx**
 ```
-$ npx wm-sspa-cli --project-path /Users/Tony/wm-sample-app --depoyed-url https://stark-ind.wavemakeronline.com/wm-sample-app
+$ npx wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
-
-
+### **npm**
+```
+$ wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
+```
 
 
 
