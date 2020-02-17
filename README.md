@@ -4,21 +4,33 @@ A CLI to convert [**WaveMaker**](https://www.wavemakeronline.com/) apps to [**Si
 ## Installation
 ### **npx**
 Run the command directly without installation 
-
->`npx wm-sspa-cli`
+```
+npx wm-sspa-cli
+```
 
 ### **npm**
+* #### Install the CLI globally & invoke ####
+```
+npm install wm-sspa-cli --global
+wm-sspa-cli
+```
+* #### Install the CLI for a given project & invoke ####
+```
+npm install wm-sspa-cli
+```
+```
+/* package.json */
+...
+"scripts":{
+    ...
+    "run_wm":"wm-sspa-cli"
+    ...
+}
+...
+```
 
-Install the CLI globally 
-
->`npm install wm-sspa-cli `
-
-and call the CLI 
-
->`wm-sspa-cli`
 
 ## Usage
-![Screenshot](https://imgur.com/HmBtEXG)
 
 The CLI requires & prompts the user for WaveMaker project path(Exported from WaveMaker) & Deployed URL of the application.
 

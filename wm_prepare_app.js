@@ -1,20 +1,17 @@
 const fs = require("fs");
 const wmTemplate = require("./wm_template");
+const { getSspaPath } = require("./wm_utils");
 
 const getPagesConfigPath = path =>
-  path ? path + `/src/main/webapp/pages/pages-config.json` : "";
-// const {getGeneratedApp} = require("./wm_utils");
-const getRoutePath = path => path + "/generated-angular-app/src/app";
+  path ? `${path}/src/main/webapp/pages/pages-config.json` : "";
+const getRoutePath = path => `${getSspaPath(path)}/src/app`;
 const getRouteFile = () => `/app.routes.ts`;
 const getSspaRouteFile = () => `/sspa_app.routes.ts`;
 const getAppModuleFile = path => `${getRoutePath(path)}/app.module.ts`;
 const getTemplateAppModuleFile = () => `./templates/app.module.ts`;
 const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
-
-/* UPDATE APP MODULE */
-const getDeployUrlStmt = (url)=> `const deployUrl="${url||''}"`;
-const updateAppModule = async (path,url) => {
-  
+const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
+const updateAppModule = async (path, url) => {
   const pagesConfig = JSON.parse(
     fs.readFileSync(getPagesConfigPath(path), "utf-8")
   );
@@ -25,8 +22,10 @@ const updateAppModule = async (path,url) => {
       c.type === "PAGE" ? "pages" : "partials"
     }/${c.name}/${c.name}.module"`;
   });
-  
-  let templateAppModule = wmTemplate.appModuleTemplate().split("{{PAGE_REPLACE_MODULE}}");
+
+  let templateAppModule = wmTemplate
+    .appModuleTemplate()
+    .split("{{PAGE_REPLACE_MODULE}}");
   templateAppModule = [
     getDeployUrlStmt(url),
     ...moduleImports,
@@ -40,7 +39,6 @@ const updateAppModule = async (path,url) => {
     "utf8"
   );
 };
-/* UPDATE APP ROUTES MODULE */
 
 const updateRoutes = async path => {
   const pageStack = [];
@@ -67,18 +65,15 @@ const updateRoutes = async path => {
   dataArr = [...pageImports, ...dataArr].join("\n");
   fs.writeFileSync(getRoutePath(path) + getSspaRouteFile(), dataArr, "utf8");
 };
-/* UPDATE MARKUP */
 
 const updateMarkUp = async path => {
   let pagesConfig = JSON.parse(
     fs.readFileSync(getPagesConfigPath(path), "utf8")
   );
   pagesConfig = pagesConfig.map(p => {
-    let filePath =
-      path +
-      `/generated-angular-app/src/app/${
-        p.type === "PAGE" ? "pages" : "partials"
-      }/${p.name}/${p.name}.component.html`;
+    let filePath = `${getSspaPath(path)}/src/app/${
+      p.type === "PAGE" ? "pages" : "partials"
+    }/${p.name}/${p.name}.component.html`;
     let content = fs.readFileSync(filePath, "utf8");
     fs.writeFileSync(
       filePath,
@@ -89,12 +84,9 @@ const updateMarkUp = async path => {
 };
 
 module.exports = {
-    prepareApp :async (projectPath,deployUrl)=>{
-        await updateRoutes(projectPath);
-        await updateAppModule(projectPath,deployUrl);
-        await updateMarkUp(projectPath);
-      }
-}
-
-
-// replace page with component
+  prepareApp: async (projectPath, deployUrl) => {
+    await updateRoutes(projectPath);
+    await updateAppModule(projectPath, deployUrl);
+    await updateMarkUp(projectPath);
+  }
+};

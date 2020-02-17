@@ -1,6 +1,8 @@
 const getGeneratedApp = path => `${path}/generated-angular-app`;
-const getBundlePath = path => `${path}/wm-sspa`;
+const getSspaPath = path => `${path}/wm-ng-app`;
+const getBundlePath = path => `${path}/wm-sspa-dist`;
 module.exports = {
-    getGeneratedApp,
-    getBundlePath
-}
+  getGeneratedApp,
+  getBundlePath,
+  getSspaPath
+};

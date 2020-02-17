@@ -1,8 +1,8 @@
-/* ####### STEPS ########
- * Deploy Application | Manual
- * Copy updated Angular.json
+/*
+ * # WM-SSPA-CLI #
+ * Update Angular.json
  * npm install
- * Ng Build
+ * Ng Build & Generate Style & Script
  * Copy Style & Script Files to Bundle Folder
  * Update Routes & App Module
  * Update Markups referring LazyLoad
@@ -18,37 +18,38 @@ const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
-const wmReplJs = require("./wm_replace_angular");
-const wmPrepApp = require("./wm_prepare_app");
+const { replaceAngularJson } = require("./wm_replace_angular");
+const { prepareApp } = require("./wm_prepare_app");
 
-const {getGeneratedApp, getBundlePath} = require("./wm_utils");
-
-
+const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
+// TODO: Verbose support | --verbose option
 const showResult = ({ stdout, stderr }) => {
   return;
   // stdout && console.log(chalk.grey(stdout));
   // stderr && console.error(chalk.red(stderr));
 };
-const backUpGenNgApp = async path => {
-  const backupPath = `${path}/wm-ng-app`;
+
+const setupSspaProj = async path => {
+  const backupPath = getSspaPath(path);
   const sourcePath = getGeneratedApp(path);
   fs.existsSync(backupPath) && rimraf.sync(backupPath);
   fs.mkdirSync(backupPath);
   await ncp(sourcePath, backupPath);
 };
-const restoreBackup = path => {
-  const backupPath = `${path}/wm-ng-app`;
-  const cleanupPath = `${getGeneratedApp(path)}`;
-  rimraf.sync(cleanupPath);
-  fs.renameSync(backupPath, cleanupPath);
+
+const cleanSspaProj = path => {
+  const backupPath = getSspaPath(path);
+  rimraf.sync(backupPath);
 };
+
 const createBundleFolder = path => {
   const bundlePath = getBundlePath(path);
   rimraf.sync(bundlePath);
   fs.mkdirSync(bundlePath);
 };
+
 const copyFileToBundle = async (path, fileName) => {
-  const bundlePath = `${getGeneratedApp(path)}/dist/ng-bundle`;
+  const bundlePath = `${getSspaPath(path)}/dist/ng-bundle`;
   const destPath = getBundlePath(path);
   const srcFile = `/${
     fs.readdirSync(bundlePath).filter(file => file.startsWith(fileName))[0]
@@ -56,33 +57,31 @@ const copyFileToBundle = async (path, fileName) => {
   await ncp(bundlePath + srcFile, destPath + srcFile);
 };
 
-const buildNgApp = path =>
-  `cd ${getGeneratedApp(path)} && npm i && ng b --prod`;
+const buildNgApp = path => `cd ${getSspaPath(path)} && npm i && ng b --prod`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main");
-const addSspa = path =>
-  `cd ${getGeneratedApp(path)} && ng add single-spa-angular`;
+const addSspa = path => `cd ${getSspaPath(path)} && ng add single-spa-angular`;
 const buildSspaApp = path =>
-  `cd ${getGeneratedApp(path)} && npm run build:single-spa`;
+  `cd ${getSspaPath(path)} && npm run build:single-spa`;
 const delSspaEmptyComp = path => {
-  const compPath = `${getGeneratedApp(path)}/src/app/empty-route`;
+  const compPath = `${getSspaPath(path)}/src/app/empty-route`;
   rimraf.sync(compPath);
 };
 
 const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
-  let res;
-  updateStatus(`Preparing Backup               `);
-  await backUpGenNgApp(projectPath);
+  // let res;
+  updateStatus(`Preparing project               `);
+  await setupSspaProj(projectPath);
 
   updateStatus(`Preparing Bundle Folder        `);
   createBundleFolder(projectPath);
 
   updateStatus(`Setup Angular Build            `);
-  await wmReplJs.replaceAngularJson(projectPath);
+  replaceAngularJson(projectPath);
 
   updateStatus(`Building the Project           `);
-  res = await exec(buildNgApp(projectPath));
+  await exec(buildNgApp(projectPath));
   // verbose && showResult(res);
   updateStatus(`Copying Styles                 `);
   await copyStyles(projectPath);
@@ -91,22 +90,22 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   await copyScripts(projectPath);
 
   updateStatus(`Updating WaveMaker App         `);
-  await wmPrepApp.prepareApp(projectPath, deployUrl);
+  await prepareApp(projectPath, deployUrl);
 
   updateStatus(`Adding Single-spa schematics   `);
-  res = await exec(addSspa(projectPath));
+  await exec(addSspa(projectPath));
   delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
 
   updateStatus(`Building for Single-Spa       `);
-  res = await exec(buildSspaApp(projectPath));
+  await exec(buildSspaApp(projectPath));
   // verbose && showResult(res);
 
   updateStatus(`Copying Final Files          `);
   await copyMain(projectPath);
 
   updateStatus(`Resetting the Project        `);
-  restoreBackup(projectPath); 
+  cleanSspaProj(projectPath);
 
   printSuccess(`Artifacts are generated at: ${getBundlePath(projectPath)}`);
 };
