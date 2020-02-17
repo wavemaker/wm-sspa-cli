@@ -22,7 +22,6 @@ const initStatus = () => {
 };
 const endStatus = () => {
   countdown.stop();
-  printCliHeader();
 };
 const printCliHeader = () => {
   clear();
@@ -49,13 +48,11 @@ const printCliHeader = () => {
 };
 
 const printSuccess = msg => {
-  printCliHeader();
   log(successHead(`\n# SUCCESS #`));
   log(text(msg));
   log("\n");
 };
 const printFailure = msg => {
-  printCliHeader();
   log(errorHead(`\n# FAILED #`));
   log(textSub(msg));
   log("\n");

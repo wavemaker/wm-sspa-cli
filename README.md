@@ -3,7 +3,8 @@ A CLI to convert [**WaveMaker**](https://www.wavemakeronline.com/) apps to [**Si
 
 ## Installation
 ### **npx**
-Run the command directly without installation 
+Run the command directly without installation. 
+`npx` will ensure it executes the latest version available.
 ```
 npx wm-sspa-cli
 ```
@@ -12,9 +13,10 @@ npx wm-sspa-cli
 * #### Install the CLI globally & invoke ####
 ```
 npm install wm-sspa-cli --global
+
 wm-sspa-cli
 ```
-* #### Install the CLI for a given project & invoke ####
+* #### Install the CLI for a given project & invoke from any location ####
 ```
 npm install wm-sspa-cli
 ```
@@ -46,7 +48,7 @@ $ npx wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronl
 ```
 ### **npm**
 ```
-$ wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
+$ wm-sspa-cli --project-path /Users/Tony/wm-sample-app --deploy-url https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
 
 
