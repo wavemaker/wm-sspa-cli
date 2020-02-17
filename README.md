@@ -10,18 +10,17 @@ npx wm-sspa-cli
 ```
 
 ### **npm**
-* #### Install the CLI globally & invoke ####
+* Install the CLI globally & invoke from any location 
 ```
 npm install wm-sspa-cli --global
 
 wm-sspa-cli
 ```
-* #### Install the CLI for a given project & invoke from any location ####
+*  Install the CLI for a given project & invoke from your package.json
 ```
 npm install wm-sspa-cli
 ```
 ```
-/* package.json */
 ...
 "scripts":{
     ...
@@ -44,11 +43,11 @@ The CLI can optionally take them as paramaters,
 
 ### **npx**
 ```
-$ npx wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
+npx wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
 ### **npm**
 ```
-$ wm-sspa-cli --project-path /Users/Tony/wm-sample-app --deploy-url https://stark-ind.wavemakeronline.com/wm-sample-app
+wm-sspa-cli --project-path /Users/Tony/wm-sample-app --deploy-url https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
 
 
