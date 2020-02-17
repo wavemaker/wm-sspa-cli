@@ -29,7 +29,6 @@ const printCliHeader = () => {
     head(
       figlet.textSync(" WaveMaker ", {
         horizontalLayout: "default",
-        verticalLayout: "default"
       })
     )
   );
@@ -48,11 +47,13 @@ const printCliHeader = () => {
 };
 
 const printSuccess = msg => {
+  printCliHeader();
   log(successHead(`\n# SUCCESS #`));
   log(text(msg));
   log("\n");
 };
 const printFailure = msg => {
+  printCliHeader();
   log(errorHead(`\n# FAILED #`));
   log(textSub(msg));
   log("\n");

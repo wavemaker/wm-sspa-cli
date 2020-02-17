@@ -10,6 +10,7 @@ const getSspaRouteFile = () => `/sspa_app.routes.ts`;
 const getAppModuleFile = path => `${getRoutePath(path)}/app.module.ts`;
 const getTemplateAppModuleFile = () => `./templates/app.module.ts`;
 const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
+const getComponentName = value => getModuleName(value);
 const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
 const updateAppModule = async (path, url) => {
   const pagesConfig = JSON.parse(
@@ -44,6 +45,7 @@ const updateRoutes = async path => {
   const pageStack = [];
   const data = fs.readFileSync(getRoutePath(path) + getRouteFile(), "utf8");
   let dataArr = data.split("\n");
+  let isLoadChildren = false;
   for (let i = 0; i < dataArr.length; i++) {
     let d = dataArr[i];
     if (d.includes("path:")) {
@@ -54,13 +56,18 @@ const updateRoutes = async path => {
         .join("");
       pageName && pageStack.push(pageName);
     } else if (d.includes("loadChildren:")) {
+      isLoadChildren = true;
       dataArr[i] = pageStack.length
-        ? `component:${pageStack[pageStack.length - 1]}Component`
+        ? `component:${getComponentName(pageStack[pageStack.length - 1])}Component`
         : ``;
+    } else if(d.includes("{") || d.includes("}")){
+      isLoadChildren = false;
+    } else if(isLoadChildren){
+      dataArr[i]=""
     }
   }
   const pageImports = pageStack.map(
-    p => `import {${p}Component} from "./pages/${p}/${p}.component"`
+    p => `import {${getComponentName(p)}Component} from "./pages/${p}/${p}.component"`
   );
   dataArr = [...pageImports, ...dataArr].join("\n");
   fs.writeFileSync(getRoutePath(path) + getSspaRouteFile(), dataArr, "utf8");
@@ -90,3 +97,5 @@ module.exports = {
     await updateMarkUp(projectPath);
   }
 };
+
+

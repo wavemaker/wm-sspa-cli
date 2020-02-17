@@ -91,7 +91,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
 
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
-
+  
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
   delSspaEmptyComp(projectPath);
