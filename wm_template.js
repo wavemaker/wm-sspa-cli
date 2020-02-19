@@ -61,9 +61,10 @@ export class WMInterceptor implements HttpInterceptor {
      WM_REDIRECTS = [
         "/services",
         "/resources",
+        "resources/",
+        "./services/",
         "/j_spring_security_check"
     ];
-    
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
         let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
         if(redirectToWm){
