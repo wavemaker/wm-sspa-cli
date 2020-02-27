@@ -12,6 +12,7 @@
  * Copy Main to Bundle Folder
  */
 const fs = require("fs");
+const node_path = require("path");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const ncp = util.promisify(require("ncp").ncp);
@@ -49,12 +50,10 @@ const createBundleFolder = path => {
 };
 
 const copyFileToBundle = async (path, fileName) => {
-  const bundlePath = `${getSspaPath(path)}/dist/ng-bundle`;
+  const bundlePath = node_path.resolve(`${getSspaPath(path)}/dist/ng-bundle`);
   const destPath = getBundlePath(path);
-  const srcFile = `/${
-    fs.readdirSync(bundlePath).filter(file => file.startsWith(fileName))[0]
-  }`;
-  await ncp(bundlePath + srcFile, destPath + srcFile);
+  const srcFile = fs.readdirSync(bundlePath).filter(file => file.startsWith(fileName))[0]
+  await ncp(node_path.resolve(bundlePath,srcFile), node_path.resolve(destPath,srcFile));
 };
 
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm i && ng b --prod`;
@@ -65,7 +64,7 @@ const addSspa = path => `cd ${getSspaPath(path)} && ng add single-spa-angular`;
 const buildSspaApp = path =>
   `cd ${getSspaPath(path)} && npm run build:single-spa`;
 const delSspaEmptyComp = path => {
-  const compPath = `${getSspaPath(path)}/src/app/empty-route`;
+  const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
 };
 
@@ -81,7 +80,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   replaceAngularJson(projectPath);
 
   updateStatus(`Building the Project           `);
-  await exec(buildNgApp(projectPath));
+  await exec(buildNgApp(projectPath)); 
   // verbose && showResult(res);
   updateStatus(`Copying Styles                 `);
   await copyStyles(projectPath);

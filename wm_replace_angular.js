@@ -1,9 +1,10 @@
 const util = require("util");
 const fs = require("fs");
+const node_path = require("path");
 const ncp = util.promisify(require("ncp").ncp);
 const { getSspaPath } = require("./wm_utils");
 const getAngularJsonPath = path => {
-  return path ? `${getSspaPath(path)}/angular.json` : "";
+  return node_path.resolve(path ? `${getSspaPath(path)}/angular.json` : "");
 };
 const wmTemplate = require(`./wm_template`);
 const replaceAngularJson = proj_path => {

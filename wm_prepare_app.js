@@ -1,14 +1,15 @@
 const fs = require("fs");
+const node_path = require("path");
 const wmTemplate = require("./wm_template");
 const { getSspaPath } = require("./wm_utils");
 
 const getPagesConfigPath = path =>
-  path ? `${path}/src/main/webapp/pages/pages-config.json` : "";
-const getRoutePath = path => `${getSspaPath(path)}/src/app`;
+  node_path.resolve(path ? `${path}/src/main/webapp/pages/pages-config.json` : "");
+const getRoutePath = path => node_path.resolve(`${getSspaPath(path)}/src/app`);
 const getRouteFile = () => `/app.routes.ts`;
 const getSspaRouteFile = () => `/sspa_app.routes.ts`;
-const getAppModuleFile = path => `${getRoutePath(path)}/app.module.ts`;
-const getTemplateAppModuleFile = () => `./templates/app.module.ts`;
+const getAppModuleFile = path => node_path.resolve(`${getRoutePath(path)}/app.module.ts`);
+const getTemplateAppModuleFile = () => node_path.resolve(`./templates/app.module.ts`);
 const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
 const getComponentName = value => getModuleName(value);
 const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
@@ -78,9 +79,9 @@ const updateMarkUp = async path => {
     fs.readFileSync(getPagesConfigPath(path), "utf8")
   );
   pagesConfig = pagesConfig.map(p => {
-    let filePath = `${getSspaPath(path)}/src/app/${
+    let filePath = node_path.resolve(`${getSspaPath(path)}/src/app/${
       p.type === "PAGE" ? "pages" : "partials"
-    }/${p.name}/${p.name}.component.html`;
+    }/${p.name}/${p.name}.component.html`);
     let content = fs.readFileSync(filePath, "utf8");
     fs.writeFileSync(
       filePath,
