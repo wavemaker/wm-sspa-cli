@@ -30,12 +30,17 @@ const showResult = ({ stdout, stderr }) => {
   // stderr && console.error(chalk.red(stderr));
 };
 
+const remPkglockFile = path => {
+  rimraf.sync(node_path.resolve(path,'package-lock.json'));
+}
 const setupSspaProj = async path => {
   const backupPath = getSspaPath(path);
   const sourcePath = getGeneratedApp(path);
+  updateStatus(`Preparing project               `);
   fs.existsSync(backupPath) && rimraf.sync(backupPath);
   fs.mkdirSync(backupPath);
   await ncp(sourcePath, backupPath);
+  remPkglockFile(backupPath);
 };
 
 const cleanSspaProj = path => {
@@ -56,7 +61,8 @@ const copyFileToBundle = async (path, fileName) => {
   await ncp(node_path.resolve(bundlePath,srcFile), node_path.resolve(destPath,srcFile));
 };
 
-const buildNgApp = path => `cd ${getSspaPath(path)} && npm i && ng b --prod`;
+const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
+const buildNgApp = path => `cd ${getSspaPath(path)} && ng b --prod`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main");
@@ -69,15 +75,18 @@ const delSspaEmptyComp = path => {
 };
 
 const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
-  // let res;
+  
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
-
+  
   updateStatus(`Preparing Bundle Folder        `);
   createBundleFolder(projectPath);
 
   updateStatus(`Setup Angular Build            `);
   replaceAngularJson(projectPath);
+
+  updateStatus(`Installing Dependencies           `);
+  await exec(installDeps(projectPath)); 
 
   updateStatus(`Building the Project           `);
   await exec(buildNgApp(projectPath)); 

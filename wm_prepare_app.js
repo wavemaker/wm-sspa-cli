@@ -1,45 +1,105 @@
 const fs = require("fs");
 const node_path = require("path");
-const wmTemplate = require("./wm_template");
 const { getSspaPath } = require("./wm_utils");
 
 const getPagesConfigPath = path =>
-  node_path.resolve(path ? `${path}/src/main/webapp/pages/pages-config.json` : "");
+  node_path.resolve(
+    path ? `${path}/src/main/webapp/pages/pages-config.json` : ""
+  );
 const getRoutePath = path => node_path.resolve(`${getSspaPath(path)}/src/app`);
 const getRouteFile = () => `/app.routes.ts`;
 const getSspaRouteFile = () => `/sspa_app.routes.ts`;
-const getAppModuleFile = path => node_path.resolve(`${getRoutePath(path)}/app.module.ts`);
-const getTemplateAppModuleFile = () => node_path.resolve(`./templates/app.module.ts`);
+const getAppModuleFile = path =>
+  node_path.resolve(`${getRoutePath(path)}/app.module.ts`);
 const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
 const getComponentName = value => getModuleName(value);
 const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
-const updateAppModule = async (path, url) => {
+
+const updateDeployUrl = (data, url) => `${getDeployUrlStmt(url)}\n${data}`;
+const updateImports = data => `
+import { Injectable } from '@angular/core';
+import { APP_BASE_HREF } from '@angular/common';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { Observable } from 'rxjs';
+\n${data}`;
+const updateCommonModule = data =>
+  data.replace(
+    /import(\s)+{(\s)*CommonModule/,
+    "import { CommonModule as NgCommonModule"
+  );
+const updateRouteImport = data =>
+  data.replace(
+    /import(\s)+{(\s)*routes(\s)*}(\s)+from(\s)+\'\.\/app.routes\'/,
+    `import { routes } from './sspa_app.routes'`
+  );
+const updateAppRoutingModule = data => `
+@NgModule({
+  imports:[RouterModule.forRoot(routes,{useHash:true, scrollPositionRestoration:'top'})],
+  exports:[RouterModule],
+  providers:[{provide:APP_BASE_HREF, useValue:"/"}]
+})
+export class AppRoutingModule{};
+\n${data}
+`;
+const updateInterceptor = data => `
+@Injectable()
+export class WMInterceptor implements HttpInterceptor {
+     WM_REDIRECTS = [
+        "/services",
+        "/resources",
+        "resources/",
+        "./services/",
+        "/j_spring_security_check"
+    ];
+    intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
+        let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
+        if(redirectToWm){
+            request = request.clone({url:deployUrl+'/'+request.url});
+        }
+        return next.handle(request);
+    }
+}
+\n${data}
+`;
+
+const updateAppModuleProviders = data => {
+  let provRegex = /providers(\s)*:(\s)*\[/;
+  let sInterceptor = `providers: [\n{provide: HTTP_INTERCEPTORS, useClass:WMInterceptor, multi: true},`;
+  data = data.replace(provRegex, sInterceptor);
+  return data;
+};
+const updateAppModuleImports = (data, path) => {
+  let impRegex = /imports(\s)*:(\s)*\[((\s)*(.)*(,))+/;
+  let impstr = data.match(impRegex)[0];
+  impstr = impstr.replace(/CommonModule/, "NgCommonModule");
+  impstr = impstr.replace(/RouterModule/, "AppRoutingModule");
   const pagesConfig = JSON.parse(
     fs.readFileSync(getPagesConfigPath(path), "utf-8")
   );
   const modules = [];
   const moduleImports = pagesConfig.map(c => {
     modules.push(`${getModuleName(c.name)}Module`);
-    return `import {${getModuleName(c.name)}Module} from "./${
+    return `import { ${getModuleName(c.name)}Module } from "./${
       c.type === "PAGE" ? "pages" : "partials"
     }/${c.name}/${c.name}.module"`;
   });
+  impstr = impstr.concat(modules).concat(`,`);
 
-  let templateAppModule = wmTemplate
-    .appModuleTemplate()
-    .split("{{PAGE_REPLACE_MODULE}}");
-  templateAppModule = [
-    getDeployUrlStmt(url),
-    ...moduleImports,
-    templateAppModule[0],
-    modules.join(","),
-    templateAppModule[1]
-  ];
-  fs.writeFileSync(
-    getAppModuleFile(path),
-    templateAppModule.join("\n"),
-    "utf8"
-  );
+  data = data.replace(impRegex, impstr);
+  return `${moduleImports.join(`\n`)}\n${data}`;
+};
+
+const updateAppModule = async (proj_path, url) => {
+  let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
+  moduleData = updateAppModuleProviders(moduleData);
+  moduleData = updateAppModuleImports(moduleData, proj_path);
+  moduleData = updateAppRoutingModule(moduleData);
+  moduleData = updateInterceptor(moduleData);
+  moduleData = updateCommonModule(moduleData);
+  moduleData = updateRouteImport(moduleData);
+  moduleData = updateImports(moduleData);
+  moduleData = updateDeployUrl(moduleData, url);
+  fs.writeFileSync(getAppModuleFile(proj_path),moduleData, "utf-8");
 };
 
 const updateRoutes = async path => {
@@ -59,16 +119,21 @@ const updateRoutes = async path => {
     } else if (d.includes("loadChildren:")) {
       isLoadChildren = true;
       dataArr[i] = pageStack.length
-        ? `component:${getComponentName(pageStack[pageStack.length - 1])}Component`
+        ? `component:${getComponentName(
+            pageStack[pageStack.length - 1]
+          )}Component`
         : ``;
-    } else if(d.includes("{") || d.includes("}")){
+    } else if (d.includes("{") || d.includes("}")) {
       isLoadChildren = false;
-    } else if(isLoadChildren){
-      dataArr[i]=""
+    } else if (isLoadChildren) {
+      dataArr[i] = "";
     }
   }
   const pageImports = pageStack.map(
-    p => `import {${getComponentName(p)}Component} from "./pages/${p}/${p}.component"`
+    p =>
+      `import {${getComponentName(
+        p
+      )}Component} from "./pages/${p}/${p}.component"`
   );
   dataArr = [...pageImports, ...dataArr].join("\n");
   fs.writeFileSync(getRoutePath(path) + getSspaRouteFile(), dataArr, "utf8");
@@ -79,9 +144,11 @@ const updateMarkUp = async path => {
     fs.readFileSync(getPagesConfigPath(path), "utf8")
   );
   pagesConfig = pagesConfig.map(p => {
-    let filePath = node_path.resolve(`${getSspaPath(path)}/src/app/${
-      p.type === "PAGE" ? "pages" : "partials"
-    }/${p.name}/${p.name}.component.html`);
+    let filePath = node_path.resolve(
+      `${getSspaPath(path)}/src/app/${
+        p.type === "PAGE" ? "pages" : "partials"
+      }/${p.name}/${p.name}.component.html`
+    );
     let content = fs.readFileSync(filePath, "utf8");
     fs.writeFileSync(
       filePath,
@@ -98,5 +165,3 @@ module.exports = {
     await updateMarkUp(projectPath);
   }
 };
-
-
