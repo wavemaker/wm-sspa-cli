@@ -84,7 +84,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
 
   updateStatus(`Setup Angular Build            `);
   replaceAngularJson(projectPath);
-
+  
   updateStatus(`Installing Dependencies           `);
   await exec(installDeps(projectPath)); 
 
