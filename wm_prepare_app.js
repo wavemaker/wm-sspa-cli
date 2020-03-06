@@ -99,7 +99,7 @@ const updateAppModule = async (proj_path, url) => {
   moduleData = updateRouteImport(moduleData);
   moduleData = updateImports(moduleData);
   moduleData = updateDeployUrl(moduleData, url);
-  fs.writeFileSync(getAppModuleFile(proj_path),moduleData, "utf-8");
+  fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
 };
 
 const updateRoutes = async path => {
@@ -157,11 +157,44 @@ const updateMarkUp = async path => {
     );
   });
 };
-
+const updateEmptyCompImport = data =>
+  `import { EmptyRouteComponent } from "./empty-route/empty-route.component";\n ${data}`;
+const updateEmptyRouteComp = data => {
+  const pnfRegEx = /canActivate(\s*):(\s*)\[PageNotFoundGaurd\],/;
+  const empCompRegEx = /canActivate(\s*):(\s*)\[PageNotFoundGaurd\],(\s*)component(\s*):(\s*)EmptyPageComponent/;
+  data = updateEmptyCompImport(
+    data.replace(pnfRegEx, ``)
+  );
+  return data;
+};
+const addEmptyCompToRoutes = proj_path => {
+  let data = fs.readFileSync(
+    getRoutePath(proj_path) + getSspaRouteFile(),
+    "utf8"
+  );
+  data = updateEmptyRouteComp(data);
+  fs.writeFileSync(getRoutePath(proj_path) + getSspaRouteFile(), data, "utf8");
+};
+const updateDeclarations = data => {
+  const decRegEx = /declarations(\s*):(\s*)\[(\s*)\]/;
+  data = data.replace(decRegEx, `declarations: [EmptyRouteComponent]`);
+  return data;
+};
+const addEmptyCompToApp = proj_path => {
+  let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
+  moduleData = updateDeclarations(moduleData);
+  moduleData = updateEmptyCompImport(moduleData);
+  fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
+};
+const updateApp = async projectPath => {
+  addEmptyCompToApp(projectPath);
+  addEmptyCompToRoutes(projectPath);
+};
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {
     await updateRoutes(projectPath);
     await updateAppModule(projectPath, deployUrl);
     await updateMarkUp(projectPath);
-  }
+  },
+  updateApp
 };

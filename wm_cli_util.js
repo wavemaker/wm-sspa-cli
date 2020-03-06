@@ -2,6 +2,7 @@ const CLI = require("clui");
 const clear = require("clear");
 const chalk = require("chalk");
 const figlet = require("figlet");
+const {version} = require("./package.json");
 
 const Spinner = CLI.Spinner;
 const countdown = new Spinner();
@@ -34,6 +35,7 @@ const printCliHeader = () => {
   );
   log(head(` * A CLI to generate Single-spa files for WaveMaker App * `));
   log(textHead(`\n                www.wavemakeronline.com`));
+  log(text(`                     version: ${version}`));
   log(textHead(`\n# Usage Examples #`));
   log(
     textHead(`npx wm-sspa-cli`),
@@ -44,6 +46,11 @@ const printCliHeader = () => {
     text(` -p <local_project_path> -d <deploy_url>`)
   );
   log("\n");
+  if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
+  log(text(`Project Location:`),textHead(process.env.PROJECT_PATH))
+  log(text(`Deployed URL:`),textHead(process.env.DEPLOY_URL))
+  log("\n");
+}
 };
 
 const printSuccess = msg => {

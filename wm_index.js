@@ -19,8 +19,8 @@ const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
-const { replaceAngularJson } = require("./wm_replace_angular");
-const { prepareApp } = require("./wm_prepare_app");
+const { replaceAngularJson,updatePackageJson } = require("./wm_json_utils");
+const { prepareApp,updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
 // TODO: Verbose support | --verbose option
@@ -62,11 +62,11 @@ const copyFileToBundle = async (path, fileName) => {
 };
 
 const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
-const buildNgApp = path => `cd ${getSspaPath(path)} && ng b --prod`;
+const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main");
-const addSspa = path => `cd ${getSspaPath(path)} && ng add single-spa-angular`;
+const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
 const buildSspaApp = path =>
   `cd ${getSspaPath(path)} && npm run build:single-spa`;
 const delSspaEmptyComp = path => {
@@ -83,8 +83,8 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   createBundleFolder(projectPath);
 
   updateStatus(`Setup Angular Build            `);
+  updatePackageJson(projectPath);
   replaceAngularJson(projectPath);
-  
   updateStatus(`Installing Dependencies           `);
   await exec(installDeps(projectPath)); 
 
@@ -102,7 +102,8 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  delSspaEmptyComp(projectPath);
+  updateApp(projectPath);
+  // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
 
   updateStatus(`Building for Single-Spa       `);
