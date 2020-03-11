@@ -121,7 +121,7 @@ const updateRoutes = async path => {
       dataArr[i] = pageStack.length
         ? `component:${getComponentName(
             pageStack[pageStack.length - 1]
-          )}Component`
+          )}Component,`
         : ``;
     } else if (d.includes("{") || d.includes("}")) {
       isLoadChildren = false;
