@@ -17,6 +17,9 @@ const { generateSspaBundle } = require("./wm_index");
 printCliHeader();
 const trimEnd = path => (path.slice(-1) === "/" ? path.slice(0, -1) : path);
 let argv = parseArgs(process.argv.slice(2));
+if(argv["keep"] || argv["k"]){
+  process.env.KEEP_SSPA_PROJ = true;
+}
 if (argv["help"] || argv["h"]) {
   printCliHeader();
 } else {

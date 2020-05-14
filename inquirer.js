@@ -14,8 +14,9 @@ http://pknl3nkxj9kt.cloud.wavemakeronline.com/wspa/services/application/wmProper
 const isValidPath = pValue => {
     pValue = pValue.slice(-1)==='/'?pValue.slice(0,-1):pValue;
   return (
-    pValue.length &&
-    fs.existsSync(path.resolve(pValue, "./generated-angular-app"))
+    pValue.length 
+    && fs.existsSync(path.resolve(pValue, "./build.xml")) 
+    && fs.existsSync(path.resolve(pValue, "./src/main/webapp/")) 
   );
 };
 const isValidURL = async pValue => {

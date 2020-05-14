@@ -1,5 +1,7 @@
 /*
  * # WM-SSPA-CLI #
+ * download zip as per proj version //TODO
+ * generate angular code //TODO
  * Update Angular.json
  * npm install
  * Ng Build & Generate Style & Script
@@ -10,6 +12,10 @@
  * Remove Sspa Empty Component
  * Run SSPA Prod Build
  * Copy Main to Bundle Folder
+ */
+/* TODO:
+ * Do not gen NgBuild, if the deployment is Angular has it already
+ * Add Ng Schematics
  */
 const fs = require("fs");
 const node_path = require("path");
@@ -23,6 +29,7 @@ const { replaceAngularJson,updatePackageJson } = require("./wm_json_utils");
 const { prepareApp,updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
+const { generateNgCode } = require("./wm_codegen_utils");
 // TODO: Verbose support | --verbose option
 const showResult = ({ stdout, stderr }) => {
   return;
@@ -34,13 +41,15 @@ const remPkglockFile = path => {
   rimraf.sync(node_path.resolve(path,'package-lock.json'));
 }
 const setupSspaProj = async path => {
-  const backupPath = getSspaPath(path);
+  await generateNgCode(path);
+  // const backupPath = getSspaPath(path);
   const sourcePath = getGeneratedApp(path);
   updateStatus(`Preparing project               `);
-  fs.existsSync(backupPath) && rimraf.sync(backupPath);
-  fs.mkdirSync(backupPath);
-  await ncp(sourcePath, backupPath);
-  remPkglockFile(backupPath);
+  // fs.existsSync(backupPath) && rimraf.sync(backupPath);
+  // fs.mkdirSync(backupPath);
+  // await ncp(sourcePath, backupPath);
+  // remPkglockFile(backupPath);
+  remPkglockFile(sourcePath);
 };
 
 const cleanSspaProj = path => {
@@ -68,7 +77,8 @@ const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
 const buildSspaApp = path =>
-  `cd ${getSspaPath(path)} && npm run build:single-spa`;
+  `cd ${getSspaPath(path)} && npm run build-prod`;
+  // `cd ${getSspaPath(path)} && npm run build:single-spa:angular-app`;
 const delSspaEmptyComp = path => {
   const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
@@ -93,10 +103,10 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   // verbose && showResult(res);
   updateStatus(`Copying Styles                 `);
   await copyStyles(projectPath);
-
+  
   updateStatus(`Copying Scripts                `);
   await copyScripts(projectPath);
-
+  
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
   
@@ -109,12 +119,12 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   updateStatus(`Building for Single-Spa       `);
   await exec(buildSspaApp(projectPath));
   // verbose && showResult(res);
-
+  
   updateStatus(`Copying Final Files          `);
   await copyMain(projectPath);
 
-  updateStatus(`Resetting the Project        `);
-  cleanSspaProj(projectPath);
+  // updateStatus(`Resetting the Project        `);
+  // !process.env.KEEP_SSPA_PROJ && cleanSspaProj(projectPath);
 
   printSuccess(`Artifacts are generated at: ${getBundlePath(projectPath)}`);
 };

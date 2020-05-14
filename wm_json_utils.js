@@ -37,7 +37,7 @@ const replaceAngularJson = proj_path => {
 const updatePackageJson = proj_path => {
   const src_path = getPackageJsonPath(proj_path);
   const pkg_json = require(src_path);
-  pkg_json['scripts'] = {...pkg_json['scripts'],'build-prod':'ng build --prod','add-single-spa':'ng add single-spa-angular'};
+  pkg_json['scripts'] = {...pkg_json['scripts'],'build-prod':'ng build --prod','add-single-spa':'ng add single-spa-angular@3'};
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
 module.exports = {

@@ -49,9 +49,11 @@ export class WMInterceptor implements HttpInterceptor {
         "/resources",
         "resources/",
         "./services/",
+        "j_spring_security_check",
         "/j_spring_security_check"
     ];
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
+      console.log("WM_SSPA_CLI | REQUEST | "+request.url);
         let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
         if(redirectToWm){
             request = request.clone({url:deployUrl+'/'+request.url});
@@ -103,8 +105,10 @@ const updateAppModule = async (proj_path, url) => {
 };
 
 const updateRoutes = async path => {
+  
   const pageStack = [];
   const data = fs.readFileSync(getRoutePath(path) + getRouteFile(), "utf8");
+  
   let dataArr = data.split("\n");
   let isLoadChildren = false;
   for (let i = 0; i < dataArr.length; i++) {
