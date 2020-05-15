@@ -13,14 +13,14 @@ npx wm-sspa-cli
 The CLI can be installed using `npm` either globally or specific to a project.
 * Installing the CLI globally can enable invoking from any location.
 ```
-npm install wm-sspa-cli --global
+npm install @wavemaker.com/wm-sspa-cli --global
 ```
 ```
 wm-sspa-cli
 ```
 *  Install the CLI for a given project & invoke from your package.json
 ```
-npm install wm-sspa-cli
+npm install @wavemaker.com/wm-sspa-cli
 ```
 ```
 ...
@@ -42,7 +42,7 @@ The CLI can optionally take them as paramaters,
 
 ### **npx**
 ```
-npx wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
+npx @wavemaker.com/wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
 ### **npm**
 ```
