@@ -38,11 +38,11 @@ const printCliHeader = () => {
   log(text(`                     version: ${version}`));
   log(textHead(`\n# Usage Examples #`));
   log(
-    textHead(`npx wm-sspa-cli`),
+    textHead(`npx @wavemaker.com/wm-sspa-cli`),
     text(` --project-path <local_project_path> --deploy-url <deploy_url>`)
   );
   log(
-    textHead(`npx wm-sspa-cli`),
+    textHead(`npx @wavemaker.com/wm-sspa-cli`),
     text(` -p <local_project_path> -d <deploy_url>`)
   );
   log("\n");

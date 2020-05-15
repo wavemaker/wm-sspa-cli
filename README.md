@@ -6,7 +6,7 @@ A CLI to convert [**WaveMaker**](https://www.wavemakeronline.com/) apps to [**Si
 The CLI can be invoked directly without installation using `npx` & 
 will ensure it executes the latest version available.
 ```
-npx wm-sspa-cli
+npx @wavemaker.com/wm-sspa-cli
 ```
 
 ### **npm**
