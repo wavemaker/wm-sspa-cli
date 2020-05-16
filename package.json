@@ -3,8 +3,13 @@
   "version": "1.4.9",
   "description": "A CLI to convert WaveMaker apps to Single-Spa compatible apps",
   "main": "index.js",
+  "files": [
+    "/dist",
+    "./index.js"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "keywords": [
     "WaveMaker",
@@ -28,5 +33,10 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "rimraf": "^3.0.2"
+  },
+  "devDependencies": {
+    "webpack": "^4.43.0",
+    "webpack-node-externals": "^1.7.2",
+    "webpack-cli": "^3.3.11"
   }
 }

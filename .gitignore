@@ -5,3 +5,6 @@ node_modules
 wm-sspa-cli-1.4.6.tgz
 wm-ng-codegen.zip
 build.xml
+wavemaker.com-wm-sspa-cli-1.4.9.tgz
+dist
+.DS_Store
