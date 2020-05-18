@@ -22,7 +22,7 @@ const isCompatibleVersion = () => {
   const showWarning = (msg) => {
     log(textHead(`# Warning #`), text(`\n ${msg}`));
   };
-  const wMsg = `Current Version: ${process.version}\n Compatible Node version >=10.15 & < 11`;
+  const wMsg = `Current Version: ${process.version}\n Compatible Node version >=10.15 & < 11\n`;
   if (nVersion[0] != MAJ_VERSION) {
     showWarning(wMsg);
   } else {
