@@ -14,7 +14,23 @@ const progress = chalk.inverse;
 const successHead = chalk.greenBright.bold;
 const errorHead = chalk.redBright.bold;
 const log = console.log;
+const MAJ_VERSION = 10;
+const MIN_VERSION = 15;
 
+const isCompatibleVersion = () => {
+  const nVersion = process.version.substring(1).split(".");
+  const showWarning = (msg) => {
+    log(textHead(`# Warning #`), text(`\n ${msg}`));
+  };
+  const wMsg = `Current Version: ${process.version}\n Compatible Node version >=10.15 & < 11`;
+  if (nVersion[0] != MAJ_VERSION) {
+    showWarning(wMsg);
+  } else {
+    if (nVersion[1] < MIN_VERSION) {
+      showWarning(wMsg);
+    }
+  }
+};
 const updateStatus = status => {
   countdown.message(` ${status}`);
 };
@@ -46,6 +62,7 @@ const printCliHeader = () => {
     text(` -p <local_project_path> -d <deploy_url>`)
   );
   log("\n");
+  isCompatibleVersion();
   if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
   log(text(`Project Location:`),textHead(process.env.PROJECT_PATH))
   log(text(`Deployed URL:`),textHead(process.env.DEPLOY_URL))
