@@ -40,7 +40,7 @@ const updatePackageJson = proj_path => {
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
     "build-prod": "ng build --prod",
-    "add-single-spa": "ng add single-spa-angular@3",
+    "add-single-spa": "ng add single-spa-angular@3.4",
   };
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
