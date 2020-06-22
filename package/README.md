@@ -6,21 +6,21 @@ A CLI to convert [**WaveMaker**](https://www.wavemakeronline.com/) apps to [**Si
 The CLI can be invoked directly without installation using `npx` & 
 will ensure it executes the latest version available.
 ```
-npx @wavemaker/wm-sspa-cli
+npx @wavemaker.com/wm-sspa-cli
 ```
 
 ### **npm**
 The CLI can be installed using `npm` either globally or specific to a project.
 * Installing the CLI globally can enable invoking from any location.
 ```
-npm install @wavemaker/wm-sspa-cli --global
+npm install @wavemaker.com/wm-sspa-cli --global
 ```
 ```
 wm-sspa-cli
 ```
 *  Install the CLI for a given project & invoke from your package.json
 ```
-npm install @wavemaker/wm-sspa-cli
+npm install @wavemaker.com/wm-sspa-cli
 ```
 ```
 ...
@@ -42,7 +42,7 @@ The CLI can optionally take them as paramaters,
 
 ### **npx**
 ```
-npx @wavemaker/wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
+npx @wavemaker.com/wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
 ### **npm**
 ```
