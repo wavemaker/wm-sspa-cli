@@ -9,7 +9,7 @@ will ensure it executes the latest version available.
 npx @wavemaker/wm-sspa-cli
 ```
 
-### **npm**
+<!-- ### **npm**
 The CLI can be installed using `npm` either globally or specific to a project.
 * Installing the CLI globally can enable invoking from any location.
 ```
@@ -30,7 +30,7 @@ npm install @wavemaker/wm-sspa-cli
     ...
 }
 ...
-```
+``` -->
 
 The CLI requires & prompts the user for WaveMaker project path(Exported from WaveMaker) & Deployed URL of the application.
 
@@ -44,10 +44,13 @@ The CLI can optionally take them as paramaters,
 ```
 npx @wavemaker/wm-sspa-cli -p /Users/Tony/wm-sample-app -d https://stark-ind.wavemakeronline.com/wm-sample-app
 ```
-### **npm**
+<!-- ### **npm**
 ```
 wm-sspa-cli --project-path /Users/Tony/wm-sample-app --deploy-url https://stark-ind.wavemakeronline.com/wm-sample-app
-```
+``` -->
+
+
+### For development & localsetup please refer [`README-dev.md`](./README-dev.md) in the repository
 
 
 

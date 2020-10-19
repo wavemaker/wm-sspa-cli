@@ -5,6 +5,7 @@ const ncp = util.promisify(require("ncp").ncp);
 const { getSspaPath } = require("./wm_utils");
 const getAngularJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/angular.json` : "");
 const getPackageJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/package.json` : "");
+const getTsConfigAppJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/src/tsconfig.app.json` : "");
 ;
 const removeLazyEntries = options =>
   options.map(op => (typeof op === "object" ? op["input"] : op));
@@ -20,8 +21,9 @@ const replaceAngularJson = proj_path => {
   /* Assign default Angular Builder */
   ng_json["projects"]["angular-app"]["architect"]["build"]["builder"] =
     ng_json["projects"]["angular-app"]["architect"]["build-ng"]["builder"];
-  /* Remote Custom Webpack Builder Config */
+  /* Remote Custom Webpack Builder Config & IndexTransform */
   delete build_options["customWebpackConfig"];
+  delete build_options["indexTransform"];
   /* Remote Lazy Scripts,Styles & Module Entries */
   build_options["styles"] = removeLazyEntries(build_options["styles"]);
   build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
@@ -40,11 +42,26 @@ const updatePackageJson = proj_path => {
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
     "build-prod": "ng build --prod",
-    "add-single-spa": "ng add single-spa-angular@3.4",
+    "add-single-spa": "ng add single-spa-angular@4",
   };
+  fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
+}
+const updateTsConfigAppJson = proj_path => {
+  const src_path = getTsConfigAppJsonPath(proj_path);
+  const pkg_json = JSON.parse(fs.readFileSync(src_path));
+  if(pkg_json && pkg_json["files"]){
+    for(let i=0;i<pkg_json["files"].length;i++){
+      let entry = pkg_json["files"][i];
+      if(entry.includes("src/main.single-spa.ts")){
+        pkg_json["files"][i] = "main.single-spa.ts"
+        break;
+      }
+    }
+  }
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
 module.exports = {
   replaceAngularJson,
-  updatePackageJson
+  updatePackageJson,
+  updateTsConfigAppJson
 };

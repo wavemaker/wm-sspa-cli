@@ -25,7 +25,7 @@ const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
-const { replaceAngularJson,updatePackageJson } = require("./wm_json_utils");
+const { replaceAngularJson,updatePackageJson,updateTsConfigAppJson } = require("./wm_json_utils");
 const { prepareApp,updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
@@ -49,7 +49,8 @@ const setupSspaProj = async path => {
   // fs.mkdirSync(backupPath);
   // await ncp(sourcePath, backupPath);
   // remPkglockFile(backupPath);
-  remPkglockFile(sourcePath);
+
+  // remPkglockFile(sourcePath);
 };
 
 const cleanSspaProj = path => {
@@ -88,7 +89,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
-  
+
   updateStatus(`Preparing Bundle Folder        `);
   createBundleFolder(projectPath);
 
@@ -100,21 +101,25 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
 
   updateStatus(`Building the Project           `);
   await exec(buildNgApp(projectPath)); 
+
   // verbose && showResult(res);
   updateStatus(`Copying Styles                 `);
   await copyStyles(projectPath);
   
   updateStatus(`Copying Scripts                `);
   await copyScripts(projectPath);
-  
+    
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
-  
+
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
   updateApp(projectPath);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
+
+  await exec(installDeps(projectPath)); 
+  updateTsConfigAppJson(projectPath);
 
   updateStatus(`Building for Single-Spa       `);
   await exec(buildSspaApp(projectPath));
