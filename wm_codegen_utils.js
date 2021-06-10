@@ -4,12 +4,11 @@
 const { getPOMPath } = require("./wm_utils");
 const fs = require("fs");
 const https = require("https");
-const extract = require("extract-zip");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const node_path = require('path');
 const { getGeneratedApp } = require("./wm_utils");
-const getCodegenPath = path => node_path.resolve(`${path}/codegen-app`);
+const getCodegenPath = path => node_path.resolve(`${path}/`);
 const getWmCodegenZipPath = path => node_path.resolve(`${path}/wm-ng-codegen.zip`);
 const getCodegenCliPath = (path) => node_path.resolve(`${getCodegenPath(path)}/src/codegen-cli.js`);
 const getProjVersion = path => {
@@ -25,43 +24,33 @@ const getProjVersion = path => {
   }
   return pVersion;
 };
-const extractCodegeZip = async path => {
-  await extract(getWmCodegenZipPath(path), { dir: path });
-};
+
 const getCodegenS3Path = (version='') =>
   version!==''?`https://s3.amazonaws.com/maven.wavemaker.com/release/com/wavemaker/app/build/wavemaker-ng-codegen/${version}/wavemaker-ng-codegen-${version}-wmapp.zip`:'';
-const downloadCodegenZip = async path => {
-  return new Promise((resolve, reject) => {
-    try {
-      const codegenZip = fs.createWriteStream(getWmCodegenZipPath(path));
-      https.get(getCodegenS3Path(getProjVersion(path)), res => {
-        res.pipe(codegenZip);
-        codegenZip.on("finish", () => {
-          codegenZip.close();
-          resolve();
-        });
-      });
-    } catch (e) {
-      console.error(`Could not download codegen | ${e}`);
-      reject(e);
-    }
-  });
-};
+
 const execNpmInstall = async path => {
     await exec(`cd ${getCodegenPath(path)} && npm i`);
 }
-const execCodegenCli = async path => {
-  await exec(`cd ${getCodegenPath(path)} && node ${getCodegenCliPath(path)} -s ${node_path.resolve(path)} -t ${getGeneratedApp(path)}`);
+
+const getCodegenPackageName = ()=>{
+   return '@wavemaker/angular-codegen';
+}
+
+const installCodegen = async (path) => {
+  await exec('npm install '+  getCodegenPackageName() +'@'+ getProjVersion(path));
+}
+const execCodegenCli = async (codegenPath, projectPath) => {
+  let angularCodegenPath = getCodegenPath(codegenPath);
+  await exec(`cd ${angularCodegenPath} && node ${getCodegenCliPath(codegenPath)} -s ${node_path.resolve(projectPath)} -t ${getGeneratedApp(projectPath)} --codegenPath=${angularCodegenPath}`);
   
 }
-const execCodegen = async path => {
-    await execNpmInstall(path);
-    await execCodegenCli(path);
+const execCodegen = async (codegenPath, projectPath) => {
+    await execNpmInstall(codegenPath);
+    await execCodegenCli(codegenPath, projectPath);
 }
 const generateNgCode = async path => {
-  await downloadCodegenZip(path);
-  await extractCodegeZip(path);
-  await execCodegen(path);
+  await installCodegen(path);
+  await execCodegen('./node_modules/'+ getCodegenPackageName(path), path);
 };
 module.exports = {
   generateNgCode
