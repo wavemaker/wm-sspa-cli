@@ -25,9 +25,6 @@ const getProjVersion = path => {
   return pVersion;
 };
 
-const getCodegenS3Path = (version='') =>
-  version!==''?`https://s3.amazonaws.com/maven.wavemaker.com/release/com/wavemaker/app/build/wavemaker-ng-codegen/${version}/wavemaker-ng-codegen-${version}-wmapp.zip`:'';
-
 const execNpmInstall = async path => {
     await exec(`cd ${getCodegenPath(path)} && npm i`);
 }
@@ -37,7 +34,7 @@ const getCodegenPackageName = ()=>{
 }
 
 const installCodegen = async (path) => {
-  await exec('npm install '+  getCodegenPackageName() +'@'+ getProjVersion(path));
+  await exec('npm install --no-save '+  getCodegenPackageName() +'@'+ getProjVersion(path));
 }
 const execCodegenCli = async (codegenPath, projectPath) => {
   let angularCodegenPath = getCodegenPath(codegenPath);
