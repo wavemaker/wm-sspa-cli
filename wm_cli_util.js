@@ -14,15 +14,15 @@ const progress = chalk.inverse;
 const successHead = chalk.greenBright.bold;
 const errorHead = chalk.redBright.bold;
 const log = console.log;
-const MAJ_VERSION = 10;
-const MIN_VERSION = 15;
+const MAJ_VERSION = 12;
+const MIN_VERSION = 22;
 
 const isCompatibleVersion = () => {
   const nVersion = process.version.substring(1).split(".");
   const showWarning = (msg) => {
     log(textHead(`# Warning #`), text(`\n ${msg}`));
   };
-  const wMsg = `Current Version: ${process.version}\n Compatible Node version >=10.15 & < 11\n`;
+  const wMsg = `Current Version: ${process.version}\n Compatible Node version >=12.22 & < 13\n`;
   if (nVersion[0] != MAJ_VERSION) {
     showWarning(wMsg);
   } else {
