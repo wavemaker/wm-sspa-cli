@@ -85,7 +85,8 @@ const updateAppModuleImports = (data, path) => {
       c.type === "PAGE" ? "pages" : "partials"
     }/${c.name}/${c.name}.module"`;
   });
-  impstr = impstr.concat(modules).concat(`,`);
+  let modulesStr = modules.join(`,`);
+  impstr = impstr.replace(/WM_MODULES_FOR_ROOT,/, "WM_MODULES_FOR_ROOT,"+modulesStr+",");
 
   data = data.replace(impRegex, impstr);
   return `${moduleImports.join(`\n`)}\n${data}`;
@@ -105,10 +106,10 @@ const updateAppModule = async (proj_path, url) => {
 };
 
 const updateRoutes = async path => {
-  
+
   const pageStack = [];
   const data = fs.readFileSync(getRoutePath(path) + getRouteFile(), "utf8");
-  
+
   let dataArr = data.split("\n");
   let isLoadChildren = false;
   for (let i = 0; i < dataArr.length; i++) {
