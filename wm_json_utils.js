@@ -19,8 +19,8 @@ const replaceAngularJson = proj_path => {
   /* Disable Vendor Chunk */
   build_config["vendorChunk"] = false;
   /* Assign default Angular Builder */
-  ng_json["projects"]["angular-app"]["architect"]["build"]["builder"] =
-    ng_json["projects"]["angular-app"]["architect"]["build-ng"]["builder"];
+  // ng_json["projects"]["angular-app"]["architect"]["build"]["builder"] =
+  //   ng_json["projects"]["angular-app"]["architect"]["build-ng"]["builder"];
   /* Remote Custom Webpack Builder Config & IndexTransform */
   delete build_options["customWebpackConfig"];
   delete build_options["indexTransform"];

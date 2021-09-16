@@ -6,3 +6,5 @@ build.xml
 dist
 .DS_Store
 *.tgz
+.history
+.idea
