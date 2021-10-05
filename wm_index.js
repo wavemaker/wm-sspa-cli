@@ -71,6 +71,15 @@ const copyFileToBundle = async (path, fileName) => {
   await ncp(node_path.resolve(bundlePath,srcFile), node_path.resolve(destPath,srcFile));
 };
 
+const updateMainJsResourcesPath = async(path, deployUrl) =>{
+  const destPath = getBundlePath(path);
+  const mainFile = fs.readdirSync(destPath).filter(file => file.startsWith('main'))[0];
+  let mainFileData = fs.readFileSync(destPath+'/' +mainFile,  {encoding:'utf8'});
+  mainFileData = mainFileData.replace (new RegExp('resources/i18n', 'g'), deployUrl +'/resources/i18n');
+  mainFileData = mainFileData.replace( new RegExp('resources/images', 'g'), deployUrl + '/resources/images');
+  fs.writeFileSync(destPath+'/' +mainFile, mainFileData);
+}
+
 const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
@@ -117,16 +126,20 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   updateApp(projectPath);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
-
+  
   await exec(installDeps(projectPath)); 
   updateTsConfigAppJson(projectPath);
 
   updateStatus(`Building for Single-Spa       `);
   await exec(buildSspaApp(projectPath));
   // verbose && showResult(res);
-  
+
   updateStatus(`Copying Final Files          `);
   await copyMain(projectPath);
+
+  updateStatus(`Update resources path          `);
+  await updateMainJsResourcesPath(projectPath, deployUrl);
+
 
   // updateStatus(`Resetting the Project        `);
   // !process.env.KEEP_SSPA_PROJ && cleanSspaProj(projectPath);
