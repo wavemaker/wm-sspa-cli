@@ -25,7 +25,7 @@ const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
-const { replaceAngularJson,updatePackageJson,updateTsConfigAppJson } = require("./wm_json_utils");
+const { replaceAngularJson,updatePackageJson,updateTsConfigAppJson, updateWebpackConfig } = require("./wm_json_utils");
 const { prepareApp,updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
@@ -84,7 +84,7 @@ const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
-const copyMain = async path => await copyFileToBundle(path, "main");
+const copyMain = async path => await copyFileToBundle(path, "main-es2015");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
 const buildSspaApp = path =>
   `cd ${getSspaPath(path)} && npm run build-prod`;
@@ -129,6 +129,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   
   await exec(installDeps(projectPath)); 
   updateTsConfigAppJson(projectPath);
+  updateWebpackConfig(projectPath);
 
   updateStatus(`Building for Single-Spa       `);
   await exec(buildSspaApp(projectPath));
