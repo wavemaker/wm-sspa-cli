@@ -39,16 +39,26 @@ if (argv["help"] || argv["h"]) {
       );
       return;
     }
+    if (!argv["sspa-deploy-url"] && !argv["s"]) {
+      argv = { ...argv, ...(await inquirer.getSSPADeployedUrl()) };
+    } else if (!argv["s"]) {
+      printFailure(
+        `Invalid SSPA Deploy url:"${argv["sspa-deploy-url"] || argv["s"]}"\n`
+      );
+      return;
+    }
 
     process.env.VERBOSE = argv["verbose"];
     process.env.PROJECT_PATH = trimEnd(argv["project-path"] || argv["p"]);
     process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"]);
+    process.env.SSPA_DEPLOY_URL = (argv["sspa-deploy-url"] || argv["s"]);
     printCliHeader();
     initStatus();
     try {
       await generateSspaBundle(
         process.env.PROJECT_PATH,
         process.env.DEPLOY_URL,
+        process.env.SSPA_DEPLOY_URL,
         process.env.VERBOSE
       );
     } catch (e) {

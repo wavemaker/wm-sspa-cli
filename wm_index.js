@@ -64,6 +64,12 @@ const createBundleFolder = path => {
   fs.mkdirSync(bundlePath);
 };
 
+const copyDistFolder = async (path) => {
+    const bundlePath = node_path.resolve(`${getSspaPath(path)}/dist/ng-bundle`);
+    const destPath = getBundlePath(path);
+    await ncp(bundlePath, destPath);
+}
+
 const copyFileToBundle = async (path, fileName) => {
   const bundlePath = node_path.resolve(`${getSspaPath(path)}/dist/ng-bundle`);
   const destPath = getBundlePath(path);
@@ -94,7 +100,7 @@ const delSspaEmptyComp = path => {
   rimraf.sync(compPath);
 };
 
-const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
+const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, verbose) => {
   
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
@@ -103,7 +109,7 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   createBundleFolder(projectPath);
 
   updateStatus(`Setup Angular Build            `);
-  updatePackageJson(projectPath);
+  updatePackageJson(projectPath, sspaDeployUrl);
   replaceAngularJson(projectPath);
   updateStatus(`Installing Dependencies           `);
   await exec(installDeps(projectPath)); 
@@ -114,9 +120,9 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   // verbose && showResult(res);
   updateStatus(`Copying Styles                 `);
   await copyStyles(projectPath);
-  
+
   updateStatus(`Copying Scripts                `);
-  await copyScripts(projectPath);
+  // await copyScripts(projectPath);
     
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
@@ -136,7 +142,8 @@ const generateSspaBundle = async (projectPath, deployUrl, verbose) => {
   // verbose && showResult(res);
 
   updateStatus(`Copying Final Files          `);
-  await copyMain(projectPath);
+  // await copyMain(projectPath);
+  await copyDistFolder(projectPath)
 
   updateStatus(`Update resources path          `);
   await updateMainJsResourcesPath(projectPath, deployUrl);
