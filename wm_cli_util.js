@@ -55,17 +55,18 @@ const printCliHeader = () => {
   log(textHead(`\n# Usage Examples #`));
   log(
     textHead(`npx @wavemaker/wm-sspa-cli`),
-    text(` --project-path <local_project_path> --deploy-url <deploy_url>`)
+    text(` --project-path <local_project_path> --deploy-url <deploy_url> --sspa-deploy-url <sspa_deploy_url>`)
   );
   log(
     textHead(`npx @wavemaker/wm-sspa-cli`),
-    text(` -p <local_project_path> -d <deploy_url>`)
+    text(` -p <local_project_path> -d <deploy_url> -s <sspa_deploy_url>`)
   );
   log("\n");
   isCompatibleVersion();
   if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
   log(text(`Project Location:`),textHead(process.env.PROJECT_PATH))
   log(text(`Deployed URL:`),textHead(process.env.DEPLOY_URL))
+  log(text(`SSPA Deployed URL:`),textHead(process.env.SSPA_DEPLOY_URL))
   log("\n");
 }
 };

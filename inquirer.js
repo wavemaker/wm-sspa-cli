@@ -19,6 +19,12 @@ const isValidPath = pValue => {
     && fs.existsSync(path.resolve(pValue, "./src/main/webapp/")) 
   );
 };
+
+const isValidURLString = async (urlString) => {
+    var res = urlString.match(/^http:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/g);
+    return (res !== null)
+};
+
 const isValidURL = async pValue => {
   pValue = pValue.slice(-1)==='/'?pValue.slice(0,-1):pValue;
   const validURL = pValue + "/services/application/wmProperties.js";
@@ -59,6 +65,20 @@ module.exports = {
         message: "Enter the Deployed URL of the App\n",
         validate: async function(val) {
           return (await isValidURL(val)) || "Please enter valid deployed urlWaveMaker project";
+        }
+      }
+    ];
+
+    return inquirer.prompt(questions);
+  },
+  getSSPADeployedUrl: () => {
+    const questions = [
+      {
+        name: "sspa-deploy-url",
+        type: "input",
+        message: "Enter the SSPA Deployed URL of the App\n",
+        validate: async function(val) {
+          return (await isValidURLString(val)) || "Please enter valid deployed SSPA url project";
         }
       }
     ];

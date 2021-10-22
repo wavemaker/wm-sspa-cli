@@ -26,8 +26,8 @@ const replaceAngularJson = proj_path => {
   delete build_options["customWebpackConfig"];
   delete build_options["indexTransform"];
   /* Remove Lazy Scripts,Styles & Module Entries */
-  // build_options["styles"] = removeLazyEntries(build_options["styles"]);
-  // build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
+  build_options["styles"] = removeLazyEntries(build_options["styles"]);
+  build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
   // build_options["lazyModules"] = [];
 
   /* Assign Updated Values */
@@ -43,12 +43,12 @@ const updateWebpackConfig = proj_path => {
   var newConfig = webpackConfig.replace(/\/\/ Feel free to modify this webpack config however you'd like to/gim, 'singleSpaWebpackConfig.module.rules.push({parser: {system: true}})');
   fs.writeFileSync(src_path, newConfig, "utf-8");
 };
-const updatePackageJson = proj_path => {
+const updatePackageJson = (proj_path, sspaDeployUrl) => {
   const src_path = getPackageJsonPath(proj_path);
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
-    "build-prod": "ng build --c=development",
+    "build-prod": "ng build --c=development --output-hashing none --  --deploy-url " + sspaDeployUrl,
     "add-single-spa": "ng add single-spa-angular@4",
   };
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
