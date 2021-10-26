@@ -48,7 +48,7 @@ const updatePackageJson = (proj_path, sspaDeployUrl) => {
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
-    "build-prod": "ng build --c=development --output-hashing none --  --deploy-url " + sspaDeployUrl,
+    "build-prod": "ng build --c=production --output-hashing none --  --deploy-url " + sspaDeployUrl,
     "add-single-spa": "ng add single-spa-angular@4",
   };
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
