@@ -10,7 +10,7 @@ const node_path = require('path');
 const { getGeneratedApp } = require("./wm_utils");
 const getCodegenPath = path => node_path.resolve(`${path}/`);
 const getWmCodegenZipPath = path => node_path.resolve(`${path}/wm-ng-codegen.zip`);
-const getCodegenCliPath = (path) => node_path.resolve(`${getCodegenPath(path)}/src/codegen-cli.js`);
+const getCodegenCliPath = (path) => node_path.resolve(`${getCodegenPath(path)}/src/codegen-args-cli.js`);
 const getProjVersion = path => {
   const pomContent = fs.readFileSync(getPOMPath(path), "utf8");
   const RUNTIME_TAG_BEGIN = `<wavemaker.app.runtime.ui.version>`;
