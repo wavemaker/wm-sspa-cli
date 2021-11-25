@@ -21,7 +21,7 @@ const isValidPath = pValue => {
 };
 
 const isValidURLString = async (urlString) => {
-    var res = urlString.match(/^http:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/g);
+    var res = urlString.match(/(https?:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9])(:?\d*)\/?([a-z_\/0-9\-#.]*)\??([a-z_\/0-9\-#=&]*)/g);
     return (res !== null)
 };
 
@@ -78,6 +78,9 @@ module.exports = {
         type: "input",
         message: "Enter the SSPA Deployed URL of the App\n",
         validate: async function(val) {
+          if(!val){
+            return true;
+          }
           return (await isValidURLString(val)) || "Please enter valid deployed SSPA url project";
         }
       }
