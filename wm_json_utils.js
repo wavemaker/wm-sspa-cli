@@ -44,6 +44,9 @@ const updateWebpackConfig = proj_path => {
   fs.writeFileSync(src_path, newConfig, "utf-8");
 };
 const updatePackageJson = (proj_path, sspaDeployUrl) => {
+  if(!sspaDeployUrl || sspaDeployUrl == 'undefined'){
+    sspaDeployUrl =  'ng-bundle/'
+  }
   const src_path = getPackageJsonPath(proj_path);
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
