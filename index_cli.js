@@ -65,7 +65,7 @@ if (argv["help"] || argv["h"]) {
       printFailure(e);
     } finally {
       endStatus();
-      process.exit(1);
+      process.exit(0);
     }
   })();
 }
