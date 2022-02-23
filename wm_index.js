@@ -83,6 +83,7 @@ const updateMainJsResourcesPath = async(path, deployUrl) =>{
   let mainFileData = fs.readFileSync(destPath+'/' +mainFile,  {encoding:'utf8'});
   mainFileData = mainFileData.replace (new RegExp('resources/i18n', 'g'), deployUrl +'/resources/i18n');
   mainFileData = mainFileData.replace( new RegExp('resources/images', 'g'), deployUrl + '/resources/images');
+  mainFileData = mainFileData.replace( new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="'+deployUrl+'/ng-bundle/"');
   fs.writeFileSync(destPath+'/' +mainFile, mainFileData);
 }
 
