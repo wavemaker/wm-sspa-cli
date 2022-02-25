@@ -79,11 +79,22 @@ const updateAppModuleImports = (data, path) => {
     fs.readFileSync(getPagesConfigPath(path), "utf-8")
   );
   const modules = [];
+  // When Dynamic components are used int he app, all the widgets are added to the app module and then we duplicate
+  // definitions of the modules with the same name. So creating an alias to avoid the conflicts. Prepending with Page/Partial
+  // to the module name
+  const conflictModules = ["Login", "header", "footer"];
   const moduleImports = pagesConfig.map(c => {
-    modules.push(`${getModuleName(c.name)}Module`);
-    return `import { ${getModuleName(c.name)}Module } from "./${
-      c.type === "PAGE" ? "pages" : "partials"
-    }/${c.name}/${c.name}.module"`;
+    if(conflictModules.includes(c.name)) {
+        modules.push(`${c.type === "PAGE" ? "Page" : "Partial"}${getModuleName(c.name)}Module`);
+        return `import { ${getModuleName(c.name)}Module as ${c.type === "PAGE" ? "Page" : "Partial"}${getModuleName(c.name)}Module } from "./${
+            c.type === "PAGE" ? "pages" : "partials"
+            }/${c.name}/${c.name}.module"`;
+    } else {
+        modules.push(`${getModuleName(c.name)}Module`);
+        return `import { ${getModuleName(c.name)}Module } from "./${
+            c.type === "PAGE" ? "pages" : "partials"
+            }/${c.name}/${c.name}.module"`
+    }
   });
   let modulesStr = modules.join(`,`);
   impstr = impstr.replace(/WM_MODULES_FOR_ROOT,/, "WM_MODULES_FOR_ROOT,"+modulesStr+",");
