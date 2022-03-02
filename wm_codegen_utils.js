@@ -34,7 +34,7 @@ const getCodegenPackageName = ()=>{
 }
 
 const installCodegen = async (path) => {
-  await exec('npm install --no-save '+  getCodegenPackageName() +'@'+ getProjVersion(path));
+  await exec('npm install --prefix . --no-save '+  getCodegenPackageName() +'@'+ getProjVersion(path));
 }
 const execCodegenCli = async (codegenPath, projectPath) => {
   let angularCodegenPath = getCodegenPath(codegenPath);
