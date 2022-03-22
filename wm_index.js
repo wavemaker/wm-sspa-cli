@@ -77,13 +77,14 @@ const copyFileToBundle = async (path, fileName) => {
   await ncp(node_path.resolve(bundlePath,srcFile), node_path.resolve(destPath,srcFile));
 };
 
-const updateMainJsResourcesPath = async(path, deployUrl) =>{
+const updateMainJsResourcesPath = async(path, deployUrl, sspaDeployUrl) =>{
   const destPath = getBundlePath(path);
   const mainFile = fs.readdirSync(destPath).filter(file => file.startsWith('main'))[0];
   let mainFileData = fs.readFileSync(destPath+'/' +mainFile,  {encoding:'utf8'});
   mainFileData = mainFileData.replace (new RegExp('resources/i18n', 'g'), deployUrl +'/resources/i18n');
   mainFileData = mainFileData.replace( new RegExp('resources/images', 'g'), deployUrl + '/resources/images');
-  mainFileData = mainFileData.replace( new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="'+deployUrl+'/ng-bundle/"');
+  mainFileData = mainFileData.replace(new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="'+deployUrl+'/ng-bundle/"');
+  mainFileData = mainFileData.split("url(\\'").join("url(\\'" + sspaDeployUrl);
   fs.writeFileSync(destPath+'/' +mainFile, mainFileData);
 }
 
@@ -147,7 +148,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, verbose
   await copyDistFolder(projectPath)
 
   updateStatus(`Update resources path          `);
-  await updateMainJsResourcesPath(projectPath, deployUrl);
+  await updateMainJsResourcesPath(projectPath, deployUrl, sspaDeployUrl);
 
 
   // updateStatus(`Resetting the Project        `);
