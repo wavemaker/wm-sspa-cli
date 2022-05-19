@@ -130,7 +130,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, verbose
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  updateApp(projectPath);
+  updateApp(projectPath, deployUrl);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
   
