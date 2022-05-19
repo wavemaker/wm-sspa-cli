@@ -2,6 +2,8 @@ const fs = require("fs");
 const node_path = require("path");
 const { getSspaPath } = require("./wm_utils");
 
+const { getGeneratedApp } = require("./wm_utils");
+
 const getPagesConfigPath = path =>
   node_path.resolve(
     path ? `${path}/src/main/webapp/pages/pages-config.json` : ""
@@ -202,9 +204,34 @@ const addEmptyCompToApp = proj_path => {
   moduleData = updateEmptyCompImport(moduleData);
   fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
 };
-const updateApp = async projectPath => {
+
+const updateMainSingleSPA = proj_path => {
+    let path = node_path.resolve(`${getGeneratedApp(proj_path)}/src/main.single-spa.ts`);
+    fs.copyFileSync(node_path.resolve(__dirname, 'overwrites/main.single-spa.ts'), path);
+};
+
+const updateEnvFiles = (proj_path, deployUrl) => {
+    deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
+    const wmPropsFileUrl = deployUrl + "/services/application/wmProperties.js";
+
+    let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
+    let envProdData = fs.readFileSync(envProdPath, "utf-8");
+    const prodPropRegEx = /production: true/;
+    envProdData = envProdData.replace(prodPropRegEx, `production: true, wmPropsFile: ` + `"` + wmPropsFileUrl + `"`);
+    fs.writeFileSync(envProdPath, envProdData, "utf-8");
+
+    let envDevPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.dev.ts`);
+    let envDevData = fs.readFileSync(envProdPath, "utf-8");
+    const devPropRegEx = /production: false/;
+    envDevData = envDevData.replace(devPropRegEx, `production: false, wmPropsFile: ` + `"` + wmPropsFileUrl + `"`);
+    fs.writeFileSync(envDevPath, envDevData, "utf-8");
+};
+
+const updateApp = async (projectPath, deployUrl) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
+  updateMainSingleSPA(projectPath);
+  updateEnvFiles(projectPath, deployUrl);
 };
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {
