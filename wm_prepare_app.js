@@ -3,6 +3,7 @@ const node_path = require("path");
 const { getSspaPath } = require("./wm_utils");
 
 const { getGeneratedApp } = require("./wm_utils");
+const { getMainSingleSPATemplate } = require("./getMainSingleSPATemplate");
 
 const getPagesConfigPath = path =>
   node_path.resolve(
@@ -207,7 +208,7 @@ const addEmptyCompToApp = proj_path => {
 
 const updateMainSingleSPA = proj_path => {
     let path = node_path.resolve(`${getGeneratedApp(proj_path)}/src/main.single-spa.ts`);
-    fs.copyFileSync(node_path.resolve(__dirname, 'overwrites/main.single-spa.ts'), path);
+    fs.writeFileSync(path, getMainSingleSPATemplate(), {encoding:'utf8',flag:'w'});
 };
 
 const updateEnvFiles = (proj_path, deployUrl) => {
