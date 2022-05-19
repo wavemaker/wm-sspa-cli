@@ -1,3 +1,4 @@
+const mainSingleSPATemplate = `
 // @ts-nocheck
 import { enableProdMode, NgZone } from '@angular/core';
 
@@ -76,3 +77,12 @@ export const unmount = [
     },
     lifecycles.unmount
 ]
+`;
+
+const getMainSingleSPATemplate = () => {
+    return mainSingleSPATemplate;
+};
+
+module.exports = {
+    getMainSingleSPATemplate
+};
