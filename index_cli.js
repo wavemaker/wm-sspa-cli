@@ -47,10 +47,14 @@ if (argv["help"] || argv["h"]) {
       );
       return;
     }
+    if (!argv["library-target"] && !argv["l"]) {
+        argv = { ...argv};
+    }
 
     process.env.VERBOSE = argv["verbose"];
     process.env.PROJECT_PATH = trimEnd(argv["project-path"] || argv["p"]);
     process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"]);
+    process.env.LIBRARY_TARGET = trimEnd(argv["library-target"] || argv["l"] || 'umd');
     process.env.SSPA_DEPLOY_URL = (argv["sspa-deploy-url"] || argv["s"] || '');
     printCliHeader();
     initStatus();
@@ -59,6 +63,7 @@ if (argv["help"] || argv["h"]) {
         process.env.PROJECT_PATH,
         process.env.DEPLOY_URL,
         process.env.SSPA_DEPLOY_URL,
+        process.env.LIBRARY_TARGET,
         process.env.VERBOSE
       );
     } catch (e) {
