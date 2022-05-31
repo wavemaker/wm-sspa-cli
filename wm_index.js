@@ -25,7 +25,7 @@ const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
-const { replaceAngularJson,updatePackageJson,updateTsConfigAppJson, updateWebpackConfig } = require("./wm_json_utils");
+const { replaceAngularJson, updatePackageJson,updateTsConfigAppJson, updateWebpackConfig } = require("./wm_json_utils");
 const { prepareApp,updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
@@ -101,7 +101,7 @@ const delSspaEmptyComp = path => {
   rimraf.sync(compPath);
 };
 
-const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, verbose) => {
+const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, verbose) => {
   
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
@@ -130,7 +130,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, verbose
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  updateApp(projectPath, deployUrl);
+  updateApp(projectPath, deployUrl, libraryTarget);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
   

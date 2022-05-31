@@ -4,6 +4,7 @@ const { getSspaPath } = require("./wm_utils");
 
 const { getGeneratedApp } = require("./wm_utils");
 const { getMainSingleSPATemplate } = require("./getMainSingleSPATemplate");
+const { updateLibraryTarget } = require("./wm_json_utils");
 
 const getPagesConfigPath = path =>
   node_path.resolve(
@@ -228,11 +229,12 @@ const updateEnvFiles = (proj_path, deployUrl) => {
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
-const updateApp = async (projectPath, deployUrl) => {
+const updateApp = async (projectPath, deployUrl, libraryTarget) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
   updateMainSingleSPA(projectPath);
   updateEnvFiles(projectPath, deployUrl);
+  updateLibraryTarget(projectPath, libraryTarget);
 };
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {

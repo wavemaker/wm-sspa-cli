@@ -66,6 +66,7 @@ const printCliHeader = () => {
   if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
   log(text(`Project Location:`),textHead(process.env.PROJECT_PATH))
   log(text(`Deployed URL:`),textHead(process.env.DEPLOY_URL))
+  log(text(`Library Target:`),textHead(process.env.LIBRARY_TARGET))
   log(text(`SSPA Deployed URL:`),textHead(process.env.SSPA_DEPLOY_URL))
   log("\n");
 }

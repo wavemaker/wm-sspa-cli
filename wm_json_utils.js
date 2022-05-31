@@ -37,6 +37,18 @@ const replaceAngularJson = proj_path => {
   ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"] = build_config;
   fs.writeFileSync(src_path, JSON.stringify(ng_json, null, 4), "utf-8");
 };
+const updateLibraryTarget = (proj_path, libraryTarget) => {
+  const src_path = getAngularJsonPath(proj_path);
+  const ng_json = JSON.parse(fs.readFileSync(src_path));
+  const build_options = ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
+  const build_config = ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"];
+  build_options["customWebpackConfig"]["libraryTarget"] = libraryTarget;
+
+  /* Assign Updated Values */
+  ng_json["projects"]["angular-app"]["architect"]["build"]["options"] = build_options;
+  ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"] = build_config;
+  fs.writeFileSync(src_path, JSON.stringify(ng_json, null, 4), "utf-8");
+};
 const updateWebpackConfig = proj_path => {
   const src_path = getWebpackConfigPath(proj_path);
   const webpackConfig = fs.readFileSync(src_path, "utf8");
@@ -72,6 +84,7 @@ const updateTsConfigAppJson = proj_path => {
 }
 module.exports = {
   replaceAngularJson,
+  updateLibraryTarget,
   updatePackageJson,
   updateTsConfigAppJson,
   updateWebpackConfig
