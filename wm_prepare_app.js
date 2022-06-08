@@ -4,6 +4,7 @@ const { getSspaPath } = require("./wm_utils");
 
 const { getGeneratedApp } = require("./wm_utils");
 const { getMainSingleSPATemplate } = require("./getMainSingleSPATemplate");
+const { getSSPACustomWebpackTemplate } = require("./sspaCustomWebpackConfigTemplate");
 const { updateLibraryTarget } = require("./wm_json_utils");
 
 const getPagesConfigPath = path =>
@@ -212,28 +213,35 @@ const updateMainSingleSPA = proj_path => {
     fs.writeFileSync(path, getMainSingleSPATemplate(), {encoding:'utf8',flag:'w'});
 };
 
-const updateEnvFiles = (proj_path, deployUrl) => {
+const updateExtraWebpack = proj_path => {
+    let path = node_path.resolve(`${getGeneratedApp(proj_path)}/extra-webpack.config.js`);
+    fs.writeFileSync(path, getSSPACustomWebpackTemplate(), {encoding:'utf8',flag:'w'});
+};
+
+const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl) => {
     deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
+    sspaDeployUrl = sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl;
     const wmPropsFileUrl = deployUrl + "/services/application/wmProperties.js";
 
     let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
     let envProdData = fs.readFileSync(envProdPath, "utf-8");
     const prodPropRegEx = /production: true/;
-    envProdData = envProdData.replace(prodPropRegEx, `production: true, wmPropsFile: ` + `"` + wmPropsFileUrl + `"`);
+    envProdData = envProdData.replace(prodPropRegEx, `production: true, wmPropsFile: ` + `"` + wmPropsFileUrl + `", sspaDeployUrl: ` + `"` + sspaDeployUrl + `"`);
     fs.writeFileSync(envProdPath, envProdData, "utf-8");
 
     let envDevPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.dev.ts`);
     let envDevData = fs.readFileSync(envProdPath, "utf-8");
     const devPropRegEx = /production: false/;
-    envDevData = envDevData.replace(devPropRegEx, `production: false, wmPropsFile: ` + `"` + wmPropsFileUrl + `"`);
+    envDevData = envDevData.replace(devPropRegEx, `production: false, wmPropsFile: ` + `"` + wmPropsFileUrl + `", sspaDeployUrl: ` + `"` + sspaDeployUrl + `"`);
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
-const updateApp = async (projectPath, deployUrl, libraryTarget) => {
+const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
   updateMainSingleSPA(projectPath);
-  updateEnvFiles(projectPath, deployUrl);
+  updateExtraWebpack(projectPath);
+  updateEnvFiles(projectPath, deployUrl, sspaDeployUrl);
   updateLibraryTarget(projectPath, libraryTarget);
 };
 module.exports = {
