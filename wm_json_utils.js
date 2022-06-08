@@ -7,7 +7,7 @@ const getWebpackConfigPath = path => node_path.resolve(path ? `${getSspaPath(pat
 const getAngularJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/angular.json` : "");
 const getPackageJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/package.json` : "");
 const getTsConfigAppJsonPath = path => node_path.resolve(path ? `${getSspaPath(path)}/src/tsconfig.app.json` : "");
-;
+
 const removeLazyEntries = options =>
   options.map(op => (typeof op === "object" ? op["input"] : op));
 const replaceAngularJson = proj_path => {
@@ -26,7 +26,6 @@ const replaceAngularJson = proj_path => {
   delete build_options["customWebpackConfig"];
   delete build_options["indexTransform"];
   /* Remove Lazy Scripts,Styles & Module Entries */
-  build_options["styles"] = removeLazyEntries(build_options["styles"]);
   build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
   // build_options["lazyModules"] = [];
 
@@ -43,6 +42,8 @@ const updateLibraryTarget = (proj_path, libraryTarget) => {
   const build_options = ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
   const build_config = ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"];
   build_options["customWebpackConfig"]["libraryTarget"] = libraryTarget;
+  //Don't bother about generating index.html
+  build_options["index"] = "";
 
   /* Assign Updated Values */
   ng_json["projects"]["angular-app"]["architect"]["build"]["options"] = build_options;
@@ -50,10 +51,10 @@ const updateLibraryTarget = (proj_path, libraryTarget) => {
   fs.writeFileSync(src_path, JSON.stringify(ng_json, null, 4), "utf-8");
 };
 const updateWebpackConfig = proj_path => {
-  const src_path = getWebpackConfigPath(proj_path);
-  const webpackConfig = fs.readFileSync(src_path, "utf8");
-  var newConfig = webpackConfig.replace(/\/\/ Feel free to modify this webpack config however you'd like to/gim, 'singleSpaWebpackConfig.module.rules.push({parser: {system: true}})');
-  fs.writeFileSync(src_path, newConfig, "utf-8");
+  // const src_path = getWebpackConfigPath(proj_path);
+  // const webpackConfig = fs.readFileSync(src_path, "utf8");
+  // var newConfig = webpackConfig.replace(/\/\/ Feel free to modify this webpack config however you'd like to/gim, 'singleSpaWebpackConfig.module.rules.push({parser: {system: true}})');
+  // fs.writeFileSync(src_path, newConfig, "utf-8");
 };
 const updatePackageJson = (proj_path, sspaDeployUrl) => {
   if(!sspaDeployUrl || sspaDeployUrl == 'undefined'){

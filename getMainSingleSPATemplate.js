@@ -21,13 +21,38 @@ window._WM_APP_PROPERTIES = {
     },
 };
 
-var appName;
+var appName, singleSpa;
 
 if (environment.production) {
     enableProdMode();
 }
 
-function importProps() {
+function mountStyle(styleSheetUrl) {
+    var head  = document.getElementsByTagName('head')[0];
+    var link  = document.createElement('link');
+    link.rel  = 'stylesheet';
+    link.type = 'text/css';
+    link.href = styleSheetUrl;
+    link.media = 'all';
+    head.appendChild(link);
+}
+
+function unmountStyle(styleSheet) {
+    styleSheet.disabled = true;
+    styleSheet.parentNode.removeChild(styleSheet);
+}
+
+function mountStyles() {
+    const styleSheetUrls = [environment.sspaDeployUrl + '/styles.css', environment.sspaDeployUrl + '/wm-styles.css'];
+    styleSheetUrls.forEach(mountStyle);
+}
+
+function unmountStyles() {
+    const styleSheets = document.querySelectorAll('link[href$="styles.css"]');
+    styleSheets.forEach(unmountStyle);
+}
+
+function mountWMAppProps() {
     let node = document.createElement('script');
     node.src = environment.wmPropsFile;
     node.id = 'sspa-wm-script';
@@ -37,9 +62,22 @@ function importProps() {
     document.getElementsByTagName('head')[0].appendChild(node);
 }
 
+function unmountWMAppProps() {
+    if(window[_WM_APP_PROPERTIES]) {
+        window[_WM_APP_PROPERTIES] = null
+    }
+
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.getElementById('sspa-wm-script');
+    if (script != null) {
+        head.removeChild(script);
+    }
+}
+
 const lifecycles = singleSpaAngular({
     bootstrapFunction: singleSpaProps => {
         appName = singleSpaProps.name;
+        singleSpa = singleSpaProps.singleSpa;
         singleSpaPropsSubject.next(singleSpaProps);
         return platformBrowserDynamic(getSingleSpaExtraProviders()).bootstrapModule(AppModule);
     },
@@ -52,28 +90,23 @@ const lifecycles = singleSpaAngular({
 export const bootstrap = lifecycles.bootstrap;
 export const mount = [
     async () => {
-        importProps();
+        mountStyles();
+        mountWMAppProps();
     },
     lifecycles.mount
 ]
 
 export const unmount = [
     async () => {
-        if(document.getElementById('single-spa-application:'+appName)) {
-            document.getElementById('single-spa-application:'+appName).innerHTML = "";
-        } else {
-            console.error("App with the name[" + appName+ "] not found");
-        }
-
-        if(window[_WM_APP_PROPERTIES]) {
-            window[_WM_APP_PROPERTIES] = null
-        }
-
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.getElementById('sspa-wm-script');
-        if (script != null) {
-            head.removeChild(script);
-        }
+        singleSpa.unloadApplication(appName, {waitForUnmount: true}).then(() => {
+            if(document.getElementById('single-spa-application:'+appName)) {
+                document.getElementById('single-spa-application:'+appName).innerHTML = "";
+            } else {
+                console.error("App with the name[" + appName+ "] not found");
+            }
+            unmountStyles();
+            unmountWMAppProps();   
+        })
     },
     lifecycles.unmount
 ]

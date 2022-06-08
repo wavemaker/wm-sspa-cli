@@ -26,7 +26,7 @@ const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
 
 const { replaceAngularJson, updatePackageJson,updateTsConfigAppJson, updateWebpackConfig } = require("./wm_json_utils");
-const { prepareApp,updateApp } = require("./wm_prepare_app");
+const { prepareApp, updateApp } = require("./wm_prepare_app");
 
 const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
 const { generateNgCode } = require("./wm_codegen_utils");
@@ -112,17 +112,17 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   updateStatus(`Setup Angular Build            `);
   updatePackageJson(projectPath, sspaDeployUrl);
   replaceAngularJson(projectPath);
-  updateStatus(`Installing Dependencies           `);
-  await exec(installDeps(projectPath)); 
+  // updateStatus(`Installing Dependencies           `);
+  // await exec(installDeps(projectPath));
 
-  updateStatus(`Building the Project           `);
-  await exec(buildNgApp(projectPath)); 
+  // updateStatus(`Building the Project           `);
+  // await exec(buildNgApp(projectPath));
 
   // verbose && showResult(res);
-  updateStatus(`Copying Styles                 `);
-  await copyStyles(projectPath);
+  // updateStatus(`Copying Styles                 `);
+  // await copyStyles(projectPath);
 
-  updateStatus(`Copying Scripts                `);
+  // updateStatus(`Copying Scripts                `);
   // await copyScripts(projectPath);
     
   updateStatus(`Updating WaveMaker App         `);
@@ -130,13 +130,14 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  updateApp(projectPath, deployUrl, libraryTarget);
+  updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
-  
-  await exec(installDeps(projectPath)); 
+
+  updateStatus(`Installing Dependencies   `);
+  await exec(installDeps(projectPath));
   updateTsConfigAppJson(projectPath);
-  updateWebpackConfig(projectPath);
+  // updateWebpackConfig(projectPath);
 
   updateStatus(`Building for Single-Spa       `);
   await exec(buildSspaApp(projectPath));
