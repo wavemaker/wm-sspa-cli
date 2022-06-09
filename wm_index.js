@@ -112,8 +112,8 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   updateStatus(`Setup Angular Build            `);
   updatePackageJson(projectPath, sspaDeployUrl);
   replaceAngularJson(projectPath);
-  // updateStatus(`Installing Dependencies           `);
-  // await exec(installDeps(projectPath));
+  updateStatus(`Installing Dependencies           `);
+  await exec(installDeps(projectPath));
 
   // updateStatus(`Building the Project           `);
   // await exec(buildNgApp(projectPath));
@@ -134,7 +134,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
 
-  updateStatus(`Installing Dependencies   `);
+  updateStatus(`Installing Single-SPA Dependencies   `);
   await exec(installDeps(projectPath));
   updateTsConfigAppJson(projectPath);
   // updateWebpackConfig(projectPath);
