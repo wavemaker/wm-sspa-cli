@@ -21,7 +21,7 @@ window._WM_APP_PROPERTIES = {
     },
 };
 
-var appName, singleSpa;
+var appName, singleSpa, wmPropsFile;
 
 if (environment.production) {
     enableProdMode();
@@ -54,7 +54,7 @@ function unmountStyles() {
 
 function mountWMAppProps() {
     let node = document.createElement('script');
-    node.src = environment.wmPropsFile;
+    node.src = wmPropsFile;
     node.id = 'sspa-wm-script';
     node.type = 'text/javascript';
     node.async = false;
@@ -77,6 +77,7 @@ function unmountWMAppProps() {
 const lifecycles = singleSpaAngular({
     bootstrapFunction: singleSpaProps => {
         appName = singleSpaProps.name;
+        wmPropsFile = environment.deployUrl + "/services/application/wmProperties.js";
         singleSpa = singleSpaProps.singleSpa;
         singleSpaPropsSubject.next(singleSpaProps);
         return platformBrowserDynamic(getSingleSpaExtraProviders()).bootstrapModule(AppModule);
