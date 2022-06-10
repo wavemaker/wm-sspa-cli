@@ -78,14 +78,16 @@ const copyFileToBundle = async (path, fileName) => {
 };
 
 const updateMainJsResourcesPath = async(path, deployUrl) =>{
-  const destPath = getBundlePath(path);
+  const destPath = getGeneratedApp(path) + "/dist/ng-bundle";
   const mainFile = fs.readdirSync(destPath).filter(file => file.startsWith('main'))[0];
   let mainFileData = fs.readFileSync(destPath+'/' +mainFile,  {encoding:'utf8'});
   mainFileData = mainFileData.replace (new RegExp('resources/i18n', 'g'), deployUrl +'/resources/i18n');
   mainFileData = mainFileData.replace( new RegExp('resources/images', 'g'), deployUrl + '/resources/images');
   mainFileData = mainFileData.replace( new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="'+deployUrl+'/ng-bundle/"');
+  // mainFileData = mainFileData.replace(/(.*)(app\/prefabs\/)/g, deployUrl+"$2");
+  // mainFileData = mainFileData.replace( new RegExp('app/prefabs', 'g'), deployUrl+'/app/prefabs"');
   fs.writeFileSync(destPath+'/' +mainFile, mainFileData);
-}
+};
 
 const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
@@ -139,17 +141,16 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   updateTsConfigAppJson(projectPath);
   // updateWebpackConfig(projectPath);
 
-  updateStatus(`Building for Single-Spa       `);
+  updateStatus(`Building for Single-Spa               `);
   await exec(buildSspaApp(projectPath));
   // verbose && showResult(res);
-
-  updateStatus(`Copying Final Files          `);
-  // await copyMain(projectPath);
-  await copyDistFolder(projectPath)
 
   updateStatus(`Update resources path          `);
   await updateMainJsResourcesPath(projectPath, deployUrl);
 
+  updateStatus(`Copying Final Files          `);
+  // await copyMain(projectPath);
+  await copyDistFolder(projectPath)
 
   // updateStatus(`Resetting the Project        `);
   // !process.env.KEEP_SSPA_PROJ && cleanSspaProj(projectPath);

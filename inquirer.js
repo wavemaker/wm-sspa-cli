@@ -64,6 +64,9 @@ module.exports = {
         type: "input",
         message: "Enter the Deployed URL of the App\n",
         validate: async function(val) {
+          if(!val){
+            return true;
+          }
           return (await isValidURL(val)) || "Please enter valid deployed urlWaveMaker project";
         }
       }

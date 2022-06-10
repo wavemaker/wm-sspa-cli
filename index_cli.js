@@ -53,7 +53,7 @@ if (argv["help"] || argv["h"]) {
 
     process.env.VERBOSE = argv["verbose"];
     process.env.PROJECT_PATH = trimEnd(argv["project-path"] || argv["p"]);
-    process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"]);
+    process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"] || 'http://localhost:8080');
     process.env.LIBRARY_TARGET = trimEnd(argv["library-target"] || argv["l"] || 'umd');
     process.env.SSPA_DEPLOY_URL = (argv["sspa-deploy-url"] || argv["s"] || '');
     printCliHeader();
