@@ -26,7 +26,7 @@ const isValidURLString = async (urlString) => {
 };
 
 const isValidURL = async pValue => {
-  pValue = pValue.slice(-1)==='/'?pValue.slice(0,-1):pValue;
+  /*pValue = pValue.slice(-1)==='/'?pValue.slice(0,-1):pValue;
   const validURL = pValue + "/services/application/wmProperties.js";
   return new Promise((resolve, reject) => {
     requestp(validURL)
@@ -36,7 +36,10 @@ const isValidURL = async pValue => {
       .catch(err => {
         resolve(false);
       });
-  });
+  });*/
+    return new Promise(function(resolve, reject) {
+        resolve(true);
+    });
 };
 module.exports = {
   isValidPath,
