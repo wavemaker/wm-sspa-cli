@@ -54,7 +54,7 @@ function unmountStyles() {
 
 function mountWMAppProps() {
     let node = document.createElement('script');
-    node.src = wmPropsFile;
+    node.src = environment.deployUrl + "/services/application/wmProperties.js";
     node.id = 'sspa-wm-script';
     node.type = 'text/javascript';
     node.async = false;
