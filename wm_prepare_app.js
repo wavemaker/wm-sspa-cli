@@ -218,29 +218,35 @@ const updateExtraWebpack = proj_path => {
     fs.writeFileSync(path, getSSPACustomWebpackTemplate(), {encoding:'utf8',flag:'w'});
 };
 
-const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl) => {
+const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountStyles) => {
     deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
     sspaDeployUrl = sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl;
-
+    let styles = ['styles.css'];
+    if (splitStyles === 'true') {
+        styles.push('wm-theme-styles.css');
+        styles.push('wm-app-styles.css');
+    } else {
+        styles.push('wm-styles.css');
+    }
     let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
     let envProdData = fs.readFileSync(envProdPath, "utf-8");
     const prodPropRegEx = /production: true/;
-    envProdData = envProdData.replace(prodPropRegEx, `production: true, deployUrl: ` + `"` + deployUrl + `", sspaDeployUrl: ` + `"` + sspaDeployUrl + `"`);
+    envProdData = envProdData.replace(prodPropRegEx, `production: true, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
     fs.writeFileSync(envProdPath, envProdData, "utf-8");
 
     let envDevPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.dev.ts`);
     let envDevData = fs.readFileSync(envProdPath, "utf-8");
     const devPropRegEx = /production: false/;
-    envDevData = envDevData.replace(devPropRegEx, `production: false, deployUrl: ` + `"` + deployUrl + `", sspaDeployUrl: ` + `"` + sspaDeployUrl + `"`);
+    envDevData = envDevData.replace(devPropRegEx, `production: false, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
-const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget) => {
+const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
-  updateEnvFiles(projectPath, deployUrl, sspaDeployUrl);
+  updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles);
   updateLibraryTarget(projectPath, libraryTarget);
 };
 module.exports = {

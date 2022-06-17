@@ -10,7 +10,7 @@ const getTsConfigAppJsonPath = path => node_path.resolve(path ? `${getSspaPath(p
 
 const removeLazyEntries = options =>
   options.map(op => (typeof op === "object" ? op["input"] : op));
-const replaceAngularJson = proj_path => {
+const replaceAngularJson = (proj_path, splitStyles) => {
   const src_path = getAngularJsonPath(proj_path);
   const ng_json = JSON.parse(fs.readFileSync(src_path));
   const build_options =
@@ -26,8 +26,22 @@ const replaceAngularJson = proj_path => {
   delete build_options["customWebpackConfig"];
   delete build_options["indexTransform"];
   /* Remove Lazy Scripts,Styles & Module Entries */
-  build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
-  // build_options["lazyModules"] = [];
+    if(splitStyles === 'true') {
+       let existingStyles = build_options["styles"];
+       existingStyles.map(function(styleSheet) {
+           if (typeof styleSheet === "object") {
+               if (styleSheet["input"].includes('app.css')) {
+                   styleSheet['bundleName'] = 'wm-app-styles';
+               }
+               if (styleSheet["input"].includes('src/assets/themes')) {
+                   styleSheet['bundleName'] = 'wm-theme-styles';
+               }
+           }
+       });
+       build_options["styles"] = existingStyles;
+   }
+   build_options["scripts"] = removeLazyEntries(build_options["scripts"]);
+   // build_options["lazyModules"] = [];
 
   /* Assign Updated Values */
   ng_json["projects"]["angular-app"]["architect"]["build"][
