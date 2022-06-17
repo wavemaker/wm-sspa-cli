@@ -103,7 +103,7 @@ const delSspaEmptyComp = path => {
   rimraf.sync(compPath);
 };
 
-const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, verbose) => {
+const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, verbose) => {
   
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
@@ -113,7 +113,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
 
   updateStatus(`Setup Angular Build            `);
   updatePackageJson(projectPath, sspaDeployUrl);
-  replaceAngularJson(projectPath);
+  replaceAngularJson(projectPath, splitStyles);
   updateStatus(`Installing Dependencies           `);
   await exec(installDeps(projectPath));
 
@@ -132,7 +132,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget);
+  updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles);
   // delSspaEmptyComp(projectPath);
   // verbose && showResult(res);
 

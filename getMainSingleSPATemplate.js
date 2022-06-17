@@ -21,7 +21,7 @@ window._WM_APP_PROPERTIES = {
     },
 };
 
-var appName, singleSpa, wmPropsFile;
+var appName, singleSpa, wmPropsFile, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
 
 if (environment.production) {
     enableProdMode();
@@ -43,13 +43,18 @@ function unmountStyle(styleSheet) {
 }
 
 function mountStyles() {
-    const styleSheetUrls = [environment.sspaDeployUrl + '/styles.css', environment.sspaDeployUrl + '/wm-styles.css'];
-    styleSheetUrls.forEach(mountStyle);
+    if(isMountStylesEnabled) {
+        styles.map(function(stylesheet) {
+            mountStyle(environment.sspaDeployUrl + '/' + stylesheet);    
+        });
+    }
 }
 
 function unmountStyles() {
-    const styleSheets = document.querySelectorAll('link[href$="styles.css"]');
-    styleSheets.forEach(unmountStyle);
+    if(isMountStylesEnabled) {
+        const styleSheets = document.querySelectorAll('link[href$="styles.css"]');
+        styleSheets.forEach(unmountStyle);
+    }
 }
 
 function mountWMAppProps() {
