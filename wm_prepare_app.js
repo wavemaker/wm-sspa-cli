@@ -6,6 +6,7 @@ const { getGeneratedApp } = require("./wm_utils");
 const { getMainSingleSPATemplate } = require("./getMainSingleSPATemplate");
 const { getSSPACustomWebpackTemplate } = require("./sspaCustomWebpackConfigTemplate");
 const { updateLibraryTarget } = require("./wm_json_utils");
+const { getPrefabsUsedInApp } = require("./wm_prefab_utils");
 
 const getPagesConfigPath = path =>
   node_path.resolve(
@@ -201,6 +202,28 @@ const updateDeclarations = data => {
   data = data.replace(decRegEx, `declarations: [EmptyRouteComponent]`);
   return data;
 };
+
+const updateAppModuleWithPrefabUrls = proj_path => {
+    let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
+    getPrefabsUsedInApp(proj_path).then(function(prefabs) {
+        const prefabsStr = `["${prefabs.join('", "')}"]`;
+        let prefabPattern = /(export const isPrefabInitialized = initPrefabConfig\(\);)/ig;
+        let prefabUrlsTemplate = `
+        import { getPrefabConfig } from '../framework/util/page-util';
+        let prefabBaseUrl = deployUrl + "/app/prefabs";
+        let usedPrefabs = ${prefabsStr};
+        usedPrefabs.forEach(function(prefabName){
+            let prefabConfig = getPrefabConfig(prefabName);
+            let prefabUrl = prefabBaseUrl + "/" + prefabName;
+            prefabConfig.resources.scripts = prefabConfig.resources.scripts.map(script => prefabUrl + script)
+            prefabConfig.resources.styles = prefabConfig.resources.styles.map(style => prefabUrl + style)
+        });
+        `;
+        moduleData = moduleData.replace(prefabPattern, "$1\n" + prefabUrlsTemplate);
+        fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
+    });
+};
+
 const addEmptyCompToApp = proj_path => {
   let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
   moduleData = updateDeclarations(moduleData);
@@ -244,6 +267,7 @@ const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountS
 const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
+  updateAppModuleWithPrefabUrls(projectPath);
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
   updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles);

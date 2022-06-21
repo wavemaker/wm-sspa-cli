@@ -77,16 +77,20 @@ const copyFileToBundle = async (path, fileName) => {
   await ncp(node_path.resolve(bundlePath,srcFile), node_path.resolve(destPath,srcFile));
 };
 
-const updateMainJsResourcesPath = async(path, deployUrl) =>{
+const updateMainJsResourcesPath = async(path, deployUrl) => {
   const destPath = getGeneratedApp(path) + "/dist/ng-bundle";
-  const mainFile = fs.readdirSync(destPath).filter(file => file.startsWith('main'))[0];
-  let mainFileData = fs.readFileSync(destPath+'/' +mainFile,  {encoding:'utf8'});
-  mainFileData = mainFileData.replace (new RegExp('resources/i18n', 'g'), deployUrl +'/resources/i18n');
-  mainFileData = mainFileData.replace( new RegExp('resources/images', 'g'), deployUrl + '/resources/images');
-  mainFileData = mainFileData.replace( new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="'+deployUrl+'/ng-bundle/"');
-  // mainFileData = mainFileData.replace(/(.*)(app\/prefabs\/)/g, deployUrl+"$2");
-  // mainFileData = mainFileData.replace( new RegExp('app/prefabs', 'g'), deployUrl+'/app/prefabs"');
-  fs.writeFileSync(destPath+'/' +mainFile, mainFileData);
+    fs.readdirSync(destPath).filter(function(file) {
+        if (node_path.extname(file).toLowerCase() === ".js") {
+            let jsFileData = fs.readFileSync(destPath + '/' + file, {encoding: 'utf8'});
+            jsFileData = jsFileData.replace(new RegExp('^resources/i18n', 'g'), deployUrl + '/resources/i18n');
+            jsFileData = jsFileData.replace(new RegExp('"\.\/resources\/images', 'g'), '"' + deployUrl + '/resources/images');
+            jsFileData = jsFileData.replace(new RegExp('"resources\/images', 'g'), '"' + deployUrl + '/resources/images');
+            jsFileData = jsFileData.replace(new RegExp('.ngDest="ng-bundle/"', 'g'), '.ngDest="' + deployUrl + '/ng-bundle/"');
+            // jsFileData = jsFileData.replace(new RegExp('"\.\/app\/prefabs\/'), 'g', '"' + deployUrl + '/app/prefabs/');
+            // jsFileData = jsFileData.replace(new RegExp('"\/app\/prefabs\/', 'g'), '"' + deployUrl + '/app/prefabs/');
+            fs.writeFileSync(destPath + '/' + file, jsFileData);
+        }
+    });
 };
 
 const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
