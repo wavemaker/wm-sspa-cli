@@ -60,10 +60,10 @@ if (argv["help"] || argv["h"]) {
     process.env.VERBOSE = argv["verbose"];
     process.env.PROJECT_PATH = trimEnd(argv["project-path"] || argv["p"]);
     process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"] || 'http://localhost:8080');
-    process.env.LIBRARY_TARGET = trimEnd(argv["library-target"] || argv["l"] || 'umd');
-    process.env.SPLIT_STYLES = trimEnd(argv["split-styles"] || argv["c"] || 'false');
-    process.env.MOUNT_STYLES = trimEnd(argv["mount-styles"] || argv["m"] || 'true');
-    process.env.SSPA_DEPLOY_URL = trimEnd(argv["sspa-deploy-url"] || argv["s"] || '');
+    process.env.LIBRARY_TARGET = argv["library-target"] || argv["l"] || 'umd';
+    process.env.SPLIT_STYLES = argv["split-styles"] || argv["c"] || 'false';
+    process.env.MOUNT_STYLES = argv["mount-styles"] || argv["m"] || 'true';
+    process.env.SSPA_DEPLOY_URL = argv["sspa-deploy-url"] || argv["s"] || '';
     printCliHeader();
     initStatus();
     try {
