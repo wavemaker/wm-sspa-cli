@@ -206,6 +206,9 @@ const updateDeclarations = data => {
 const updateAppModuleWithPrefabUrls = proj_path => {
     let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
     getPrefabsUsedInApp(proj_path).then(function(prefabs) {
+        if(!prefabs.length) {
+            return
+        }
         const prefabsStr = `["${prefabs.join('", "')}"]`;
         let prefabPattern = /(export const isPrefabInitialized = initPrefabConfig\(\);)/ig;
         let prefabUrlsTemplate = `
