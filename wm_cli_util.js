@@ -68,12 +68,12 @@ const printCliHeader = () => {
   log("\n");
   isCompatibleVersion();
   if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
-      log(text(`Project Location: `),textHead(process.env.PROJECT_PATH));
-      log(text(`Deployed URL - Where to make the backend calls: `),textHead(process.env.DEPLOY_URL));
-      log(text(`Library Target(Default - UMD) - umd, system: `),textHead(process.env.LIBRARY_TARGET));
-      log(text(`Split Styles(Default - FALSE, don't split) - This will generate(when true) Base, Theme & App styles separately(styles,wm-theme-styles,wm-app-styles): `),textHead(process.env.SPLIT_STYLES));
-      log(text(`Mount Styles(Default - TRUE, client will handle mounting) - Incase, user wants to handle the mounting of styles: `),textHead(process.env.MOUNT_STYLES));
-      log(text(`SSPA Deployed URL - Required to download apps static content: `),textHead(process.env.SSPA_DEPLOY_URL));
+      log(text(`Project Location(-p): `),textHead(process.env.PROJECT_PATH));
+      log(text(`Deployed URL(-d) - Where to make the backend calls: `),textHead(process.env.DEPLOY_URL));
+      log(text(`Library Target(-l)(Default - umd) - umd, system: `),textHead(process.env.LIBRARY_TARGET));
+      log(text(`Split Styles(-c)(Default - false, don't split) - This will generate(when true) Base, Theme & App styles separately(styles,wm-theme-styles,wm-app-styles): `),textHead(process.env.SPLIT_STYLES));
+      log(text(`Mount Styles(-m)(Default - true, client will handle mounting) - Incase, user wants to handle the mounting of styles: `),textHead(process.env.MOUNT_STYLES));
+      log(text(`SSPA Deployed URL(-s) - Required to download apps static content: `),textHead(process.env.SSPA_DEPLOY_URL));
       log("\n");
   }
 };
