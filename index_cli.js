@@ -49,12 +49,36 @@ if (argv["help"] || argv["h"]) {
     }
     if (!argv["library-target"] && !argv["l"]) {
         argv = { ...argv };
+    } else {
+      argv["l"] = argv["l"].toLowerCase();
+      if(!['umd', 'system'].includes(argv['l'])) {
+        printFailure(
+            `Invalid value passed to library-target(-l) "${argv["library-target"] || argv["l"]}". Please check\n`
+        );
+        return;
+      }
     }
     if (!argv["split-styles"] && !argv["c"]) {
         argv = { ...argv };
+    } else {
+      argv["c"] = argv["c"].toLowerCase();
+      if(!['true', 'false'].includes(argv['c'])) {
+        printFailure(
+            `Invalid value passed to split-styles(-c) "${argv["split-styles"] || argv["c"]}". Please check\n`
+        );
+        return;
+      }
     }
     if (!argv["mount-styles"] && !argv["m"]) {
         argv = { ...argv };
+    } else {
+      argv["m"] = argv["m"].toLowerCase();
+      if(!['true', 'false'].includes(argv['m'])) {
+        printFailure(
+            `Invalid value passed to mount-styles(-m) "${argv["mount-styles"] || argv["m"]}". Please check\n`
+        );
+        return;
+      }
     }
 
     process.env.VERBOSE = argv["verbose"];
