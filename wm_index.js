@@ -149,8 +149,8 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   await exec(buildSspaApp(projectPath));
   // verbose && showResult(res);
 
-  updateStatus(`Update resources path          `);
-  await updateMainJsResourcesPath(projectPath, deployUrl);
+  //updateStatus(`Update resources path          `);
+  //await updateMainJsResourcesPath(projectPath, deployUrl);
 
   updateStatus(`Copying Final Files          `);
   // await copyMain(projectPath);

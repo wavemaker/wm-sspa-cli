@@ -21,7 +21,7 @@ window._WM_APP_PROPERTIES = {
     },
 };
 
-var appName, singleSpa, wmPropsFile, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
+var appName, singleSpa, wmPropsFile, imgObserver, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
 
 if (environment.production) {
     enableProdMode();
@@ -78,14 +78,13 @@ function unmountWMAppProps() {
         head.removeChild(script);
     }
 }
-
-function addObserver() {
-    let observer = new MutationObserver(function(mutations_list) {
-		mutations_list.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(added_node) {
-            if(added_node.className === 'overlay-container') {
-                if(added_node.childNodes[0].id === 'toast-container') {
-                    added_node.classList.add("wm-app");
+function addToasterObserver() {
+    let observer = new MutationObserver(function(list) {
+		list.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+            if(node.className === 'overlay-container') {
+                if(node.childNodes[0].id === 'toast-container') {
+                    node.classList.add("wm-app");
                     observer.disconnect();
                 }
             }});
@@ -94,10 +93,34 @@ function addObserver() {
 	observer.observe(document.body, { subtree: false, childList: true });
 }
 
+function addImgObserver() {
+    imgObserver = new MutationObserver(function(list) {
+		list.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+            if(node.nodeName.toUpperCase() === 'IMG') {
+				let src = node.getAttribute("src");
+                if(src.startsWith("./")) {
+                    node.setAttribute("src", environment.deployUrl + src.slice(1));
+                }
+            }});
+        });
+    });
+	imgObserver.observe(document.getElementById('single-spa-application:'+appName), { subtree: true, childList: true });
+}
+
+function disconnectObservers() {
+    imgObserver.disconnect();	
+}
+
+function addObservers(appName) {
+	addToasterObserver();
+	addImgObserver();
+}
+
 const lifecycles = singleSpaAngular({
     bootstrapFunction: singleSpaProps => {
-	    addObserver();
         appName = singleSpaProps.name;
+	    addObservers(appName);
         wmPropsFile = environment.deployUrl + "/services/application/wmProperties.js";
         singleSpa = singleSpaProps.singleSpa;
         singleSpaPropsSubject.next(singleSpaProps);
@@ -126,6 +149,7 @@ export const unmount = [
             } else {
                 console.error("App with the name[" + appName+ "] not found");
             }
+			disconnectObservers();
             unmountStyles();
             unmountWMAppProps();   
         })
