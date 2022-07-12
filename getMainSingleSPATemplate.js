@@ -79,8 +79,24 @@ function unmountWMAppProps() {
     }
 }
 
+function addObserver() {
+    let observer = new MutationObserver(function(mutations_list) {
+		mutations_list.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(added_node) {
+            if(added_node.className === 'overlay-container') {
+                if(added_node.childNodes[0].id === 'toast-container') {
+                    added_node.classList.add("wm-app");
+                    observer.disconnect();
+                }
+            }});
+        });
+    });
+	observer.observe(document.body, { subtree: false, childList: true });
+}
+
 const lifecycles = singleSpaAngular({
     bootstrapFunction: singleSpaProps => {
+	    addObserver();
         appName = singleSpaProps.name;
         wmPropsFile = environment.deployUrl + "/services/application/wmProperties.js";
         singleSpa = singleSpaProps.singleSpa;
