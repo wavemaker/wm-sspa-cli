@@ -274,7 +274,7 @@ const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, s
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
   updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles);
-  updateLibraryTarget(projectPath, libraryTarget);
+  //updateLibraryTarget(projectPath, libraryTarget);
 };
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {

@@ -82,12 +82,13 @@ function addToasterObserver() {
     let observer = new MutationObserver(function(list) {
 		list.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
-            if(node.className === 'overlay-container') {
-                if(node.childNodes[0].id === 'toast-container') {
-                    node.classList.add("wm-app");
-                    observer.disconnect();
+                if(node.className === 'overlay-container') {
+                    if(node.childNodes[0].id === 'toast-container') {
+                        node.classList.add("wm-app");
+                        observer.disconnect();
+                    }
                 }
-            }});
+			});
         });
     });
 	observer.observe(document.body, { subtree: false, childList: true });
@@ -95,17 +96,17 @@ function addToasterObserver() {
 
 function addImgObserver() {
     imgObserver = new MutationObserver(function(list) {
-		list.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(node) {
-            if(node.nodeName.toUpperCase() === 'IMG') {
-				let src = node.getAttribute("src");
-                if(src.startsWith("./")) {
-                    node.setAttribute("src", environment.deployUrl + src.slice(1));
-                }
-            }});
+        list.forEach(function(mutation) {
+              if (mutation.type === 'attributes') {
+                  let targetEle = mutation.target, src = targetEle.getAttribute("src");
+                  if(src.startsWith("./")) {
+                    targetEle.setAttribute("src", environment.deployUrl + src.slice(1));
+                  }
+              }
         });
     });
-	imgObserver.observe(document.getElementById('single-spa-application:'+appName), { subtree: true, childList: true });
+    imgObserver.observe(document.getElementById('single-spa-application:'+appName), 
+                            { attributes: true, subtree: true, childList: true , attributeFilter: ['src']});
 }
 
 function disconnectObservers() {
