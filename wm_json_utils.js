@@ -10,22 +10,26 @@ const getTsConfigAppJsonPath = path => node_path.resolve(path ? `${getSspaPath(p
 
 const removeLazyEntries = options =>
   options.map(op => (typeof op === "object" ? op["input"] : op));
-const replaceAngularJson = (proj_path, splitStyles) => {
+
+const replaceAngularJson = (proj_path, splitStyles, libraryTarget) => {
   const src_path = getAngularJsonPath(proj_path);
   const ng_json = JSON.parse(fs.readFileSync(src_path));
-  const build_options =
-    ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
-  
+  const build_options = ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
   const build_config = ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"];
   /* Disable Vendor Chunk */
   build_config["vendorChunk"] = false;
+  build_config["outputHashing"] = "none";
   /* Assign default Angular Builder */
   // ng_json["projects"]["angular-app"]["architect"]["build"]["builder"] =
   //   ng_json["projects"]["angular-app"]["architect"]["build-ng"]["builder"];
   /* Remote Custom Webpack Builder Config & IndexTransform */
-  delete build_options["customWebpackConfig"];
+  // delete build_options["customWebpackConfig"];
   delete build_options["indexTransform"];
-  /* Remove Lazy Scripts,Styles & Module Entries */
+  build_options["customWebpackConfig"]["libraryTarget"] = libraryTarget;
+  //Don't bother about generating index.html
+  build_options["index"] = "";
+
+      /* Remove Lazy Scripts,Styles & Module Entries */
     if(splitStyles === 'true') {
        let existingStyles = build_options["styles"];
        existingStyles.map(function(styleSheet) {
@@ -44,9 +48,7 @@ const replaceAngularJson = (proj_path, splitStyles) => {
    // build_options["lazyModules"] = [];
 
   /* Assign Updated Values */
-  ng_json["projects"]["angular-app"]["architect"]["build"][
-    "options"
-  ] = build_options;
+  ng_json["projects"]["angular-app"]["architect"]["build"]["options"] = build_options;
   ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"] = build_config;
   fs.writeFileSync(src_path, JSON.stringify(ng_json, null, 4), "utf-8");
 };
@@ -78,7 +80,7 @@ const updatePackageJson = (proj_path, sspaDeployUrl) => {
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
-    "build-prod": "ng build --c=production --output-hashing none --  --deploy-url " + sspaDeployUrl,
+    "build-prod": "ng build --c=production --  --deploy-url " + sspaDeployUrl,
     "add-single-spa": "ng add single-spa-angular@4",
   };
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");

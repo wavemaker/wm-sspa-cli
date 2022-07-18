@@ -37,25 +37,9 @@ const showResult = ({ stdout, stderr }) => {
   // stderr && console.error(chalk.red(stderr));
 };
 
-const remPkglockFile = path => {
-  rimraf.sync(node_path.resolve(path,'package-lock.json'));
-}
 const setupSspaProj = async path => {
   await generateNgCode(path);
-  // const backupPath = getSspaPath(path);
   const sourcePath = getGeneratedApp(path);
-  updateStatus(`Preparing project               `);
-  // fs.existsSync(backupPath) && rimraf.sync(backupPath);
-  // fs.mkdirSync(backupPath);
-  // await ncp(sourcePath, backupPath);
-  // remPkglockFile(backupPath);
-
-  // remPkglockFile(sourcePath);
-};
-
-const cleanSspaProj = path => {
-  const backupPath = getSspaPath(path);
-  rimraf.sync(backupPath);
 };
 
 const createBundleFolder = path => {
@@ -99,9 +83,7 @@ const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main-es2015");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
-const buildSspaApp = path =>
-  `cd ${getSspaPath(path)} && npm run build-prod`;
-  // `cd ${getSspaPath(path)} && npm run build:single-spa:angular-app`;
+const buildSspaApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
 const delSspaEmptyComp = path => {
   const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
@@ -115,49 +97,28 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   updateStatus(`Preparing Bundle Folder        `);
   createBundleFolder(projectPath);
 
-  updateStatus(`Setup Angular Build            `);
-  updatePackageJson(projectPath, sspaDeployUrl);
-  replaceAngularJson(projectPath, splitStyles);
-  updateStatus(`Installing Dependencies           `);
-  await exec(installDeps(projectPath));
-
-  // updateStatus(`Building the Project           `);
-  // await exec(buildNgApp(projectPath));
-
-  // verbose && showResult(res);
-  // updateStatus(`Copying Styles                 `);
-  // await copyStyles(projectPath);
-
-  // updateStatus(`Copying Scripts                `);
-  // await copyScripts(projectPath);
-    
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
+  updatePackageJson(projectPath, sspaDeployUrl);
+
+  updateStatus(`Installing Dependencies   `);
+  await exec(installDeps(projectPath));
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
-  updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles);
-  // delSspaEmptyComp(projectPath);
-  // verbose && showResult(res);
+
+  replaceAngularJson(projectPath, splitStyles, libraryTarget);
+  updateTsConfigAppJson(projectPath);
+  await updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles);
 
   updateStatus(`Installing Single-SPA Dependencies   `);
   await exec(installDeps(projectPath));
-  updateTsConfigAppJson(projectPath);
-  // updateWebpackConfig(projectPath);
 
   updateStatus(`Building for Single-Spa               `);
   await exec(buildSspaApp(projectPath));
-  // verbose && showResult(res);
-
-  //updateStatus(`Update resources path          `);
-  //await updateMainJsResourcesPath(projectPath, deployUrl);
 
   updateStatus(`Copying Final Files          `);
-  // await copyMain(projectPath);
   await copyDistFolder(projectPath)
-
-  // updateStatus(`Resetting the Project        `);
-  // !process.env.KEEP_SSPA_PROJ && cleanSspaProj(projectPath);
 
   printSuccess(`Artifacts are generated at: ${getBundlePath(projectPath)}`);
 };
