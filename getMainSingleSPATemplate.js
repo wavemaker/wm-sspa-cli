@@ -98,15 +98,18 @@ function addImgObserver() {
     imgObserver = new MutationObserver(function(list) {
         list.forEach(function(mutation) {
               if (mutation.type === 'attributes') {
-                  let targetEle = mutation.target, src = targetEle.getAttribute("src");
+                  let targetEle = mutation.target, src = targetEle.getAttribute("src"), poster = targetEle.getAttribute("poster");
                   if(src.startsWith("./")) {
                     targetEle.setAttribute("src", environment.deployUrl + src.slice(1));
                   }
+				  if(poster && poster.startsWith("resources")) {
+                      targetEle.setAttribute("poster", environment.deployUrl + "/" + poster);
+				  }
               }
         });
     });
     imgObserver.observe(document.getElementById('single-spa-application:'+appName), 
-                            { attributes: true, subtree: true, childList: true , attributeFilter: ['src']});
+                            { attributes: true, subtree: true, childList: true , attributeFilter: ['src', 'poster']});
 }
 
 function disconnectObservers() {
