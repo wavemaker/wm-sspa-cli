@@ -25,8 +25,9 @@ const updateDeployUrl = (data, url) => `${getDeployUrlStmt(url)}\n${data}`;
 const updateImports = data => `
 import { Injectable } from '@angular/core';
 import { APP_BASE_HREF } from '@angular/common';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpResponse, HttpHandler, HttpEvent, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 \n${data}`;
 const updateCommonModule = data =>
   data.replace(
@@ -55,15 +56,25 @@ export class WMInterceptor implements HttpInterceptor {
         "/resources",
         "resources/",
         "./services/",
+        "ng-bundle",
         "j_spring_security_check",
         "/j_spring_security_check"
     ];
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
       console.log("WM_SSPA_CLI | REQUEST | "+request.url);
         let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
-        if(redirectToWm){
+        let isPathMappingReq = request.url.startsWith("ng-bundle/path_mapping.json");
+        if (redirectToWm) {
             request = request.clone({url:deployUrl+'/'+request.url});
         }
+        if (isPathMappingReq) {
+            return next.handle(request).pipe(map(resp => {
+                if (resp instanceof HttpResponse) {
+                    let clResp = resp.clone({ body: {} });
+                    return clResp;
+                }
+            }));
+        } 
         return next.handle(request);
     }
 }
