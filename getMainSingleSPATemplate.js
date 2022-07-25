@@ -11,17 +11,7 @@ import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 import { singleSpaPropsSubject } from './single-spa/single-spa-props';
 
-window._WM_APP_PROPERTIES = {
-    "supportedLanguages" : {
-        "en" : {
-            "angular" : "en",
-            "fullCalendar" : null,
-            "moment" : null
-        }
-    },
-};
-
-var appName, singleSpa, wmPropsFile, imgObserver, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
+var imgObserver, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
 
 if (environment.production) {
     enableProdMode();
@@ -57,14 +47,27 @@ function unmountStyles() {
     }
 }
 
-function mountWMAppProps() {
-    let node = document.createElement('script');
-    node.src = environment.deployUrl + "/services/application/wmProperties.js";
-    node.id = 'sspa-wm-script';
-    node.type = 'text/javascript';
-    node.async = false;
-    node.charset = 'utf-8';
-    document.getElementsByTagName('head')[0].appendChild(node);
+function mountWMAppProps(appName) {
+	let wmProps = sessionStorage.getItem(appName + "-wmProps");
+	if(wmProps) {
+		return new Promise((resolve, reject) => {
+			return resolve(JSON.parse(wmProps));
+		})
+	} else {
+        return new Promise((resolve, reject) => {
+            let script = document.createElement('script');
+            script.src = environment.deployUrl + "/services/application/wmProperties.js";
+            script.id = 'sspa-wm-script';
+            script.type = 'text/javascript';
+            script.async = false;
+            script.charset = 'utf-8';
+            script.onload = () => {
+				sessionStorage.setItem(appName + "-wmProps", JSON.stringify(_WM_APP_PROPERTIES));
+                return resolve(_WM_APP_PROPERTIES);
+            }
+            document.getElementsByTagName('head')[0].appendChild(script);
+        })
+	} 
 }
 
 function unmountWMAppProps() {
@@ -78,6 +81,7 @@ function unmountWMAppProps() {
         head.removeChild(script);
     }
 }
+
 function addToasterObserver() {
     let observer = new MutationObserver(function(list) {
 		list.forEach(function(mutation) {
@@ -94,7 +98,7 @@ function addToasterObserver() {
 	observer.observe(document.body, { subtree: false, childList: true });
 }
 
-function addImgObserver() {
+function addImgObserver(appName) {
     imgObserver = new MutationObserver(function(list) {
         list.forEach(function(mutation) {
               if (mutation.type === 'attributes') {
@@ -118,15 +122,26 @@ function disconnectObservers() {
 
 function addObservers(appName) {
 	addToasterObserver();
-	addImgObserver();
+	addImgObserver(appName);
+}
+
+function unloadModule(appName) {
+    if(System) {
+        try {
+            importMapOverrides.getDefaultMap().then((importMap) => {
+                System.delete(importMap.imports[appName])
+            });
+        } catch(e) {
+            console.error("Unloading the module for the app[" + appName + "] failed.", e);
+        }
+    } else {
+        console.error("SystemJs not found in the global namespace. Please unload the module for the app : ", appName)
+    }
 }
 
 const lifecycles = singleSpaAngular({
-    bootstrapFunction: singleSpaProps => {
-        appName = singleSpaProps.name;
-	    addObservers(appName);
-        wmPropsFile = environment.deployUrl + "/services/application/wmProperties.js";
-        singleSpa = singleSpaProps.singleSpa;
+    bootstrapFunction: (singleSpaProps) => {
+	    addObservers(singleSpaProps.name);
         singleSpaPropsSubject.next(singleSpaProps);
         return platformBrowserDynamic(getSingleSpaExtraProviders()).bootstrapModule(AppModule);
     },
@@ -136,26 +151,32 @@ const lifecycles = singleSpaAngular({
     NgZone,
 });
 
-export const bootstrap = lifecycles.bootstrap;
+export const bootstrap = [
+	async (singleSpaProps) => {
+        await mountWMAppProps(singleSpaProps.name).then(props => window._WM_APP_PROPERTIES = props);
+    },
+	lifecycles.bootstrap
+];
+
 export const mount = [
-    async () => {
+    async (singleSpaProps) => {
         mountStyles();
-        mountWMAppProps();
     },
     lifecycles.mount
 ]
 
 export const unmount = [
-    async () => {
-        singleSpa.unloadApplication(appName, {waitForUnmount: true}).then(() => {
-            if(document.getElementById('single-spa-application:'+appName)) {
-                document.getElementById('single-spa-application:'+appName).innerHTML = "";
+    async (singleSpaProps) => {
+        singleSpaProps.singleSpa.unloadApplication(singleSpaProps.name, {waitForUnmount: true}).then(() => {
+            if(document.getElementById('single-spa-application:'+singleSpaProps.name)) {
+                document.getElementById('single-spa-application:'+singleSpaProps.name).innerHTML = "";
             } else {
-                console.error("App with the name[" + appName+ "] not found");
+                console.error("App with the name[" + singleSpaProps.name+ "] not found");
             }
 			disconnectObservers();
             unmountStyles();
             unmountWMAppProps();   
+            unloadModule(singleSpaProps.name)
         })
     },
     lifecycles.unmount
