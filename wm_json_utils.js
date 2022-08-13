@@ -18,7 +18,6 @@ const replaceAngularJson = (proj_path, splitStyles, libraryTarget) => {
   const build_config = ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"];
   /* Disable Vendor Chunk */
   build_config["vendorChunk"] = false;
-  build_config["outputHashing"] = "none";
   /* Assign default Angular Builder */
   // ng_json["projects"]["angular-app"]["architect"]["build"]["builder"] =
   //   ng_json["projects"]["angular-app"]["architect"]["build-ng"]["builder"];
@@ -80,7 +79,8 @@ const updatePackageJson = (proj_path, sspaDeployUrl) => {
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
-    "build-prod": "ng build --c=production --  --deploy-url " + sspaDeployUrl,
+    "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
+    "postbuild:sspa": "node build-scripts/sspa-post-build.js",
     "add-single-spa": "ng add single-spa-angular@4",
   };
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");

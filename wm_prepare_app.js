@@ -5,6 +5,7 @@ const { getSspaPath } = require("./wm_utils");
 const { getGeneratedApp } = require("./wm_utils");
 const { getMainSingleSPATemplate } = require("./getMainSingleSPATemplate");
 const { getSSPACustomWebpackTemplate } = require("./sspaCustomWebpackConfigTemplate");
+const { getSSPAPostBuildScriptTemplate } = require("./sspaPostBuild");
 const { updateLibraryTarget } = require("./wm_json_utils");
 const { getPrefabsUsedInApp } = require("./wm_prefab_utils");
 
@@ -258,12 +259,12 @@ const updateExtraWebpack = proj_path => {
 const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountStyles) => {
     deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
     sspaDeployUrl = sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl;
-    let styles = ['styles.css'];
+    let styles = ['styles.{styles-hash}.css'];
     if (splitStyles === 'true') {
-        styles.push('wm-theme-styles.css');
-        styles.push('wm-app-styles.css');
+        styles.push('wm-theme-styles.{wm-theme-styles-hash}.css');
+        styles.push('wm-app-styles.{wm-app-styles-hash}.css');
     } else {
-        styles.push('wm-styles.css');
+        styles.push('wm-styles.{wm-styles-hash}.css');
     }
     let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
     let envProdData = fs.readFileSync(envProdPath, "utf-8");
@@ -278,6 +279,11 @@ const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountS
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
+const addPostBuildScript = (projectPath) => {
+    let path = node_path.resolve(`${getGeneratedApp(projectPath)}/build-scripts/sspa-post-build.js`);
+    fs.writeFileSync(path, getSSPAPostBuildScriptTemplate(), {encoding:'utf8',flag:'w'});
+}
+
 const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
@@ -285,7 +291,7 @@ const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, s
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
   updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles);
-  //updateLibraryTarget(projectPath, libraryTarget);
+  addPostBuildScript(projectPath);
 };
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {
