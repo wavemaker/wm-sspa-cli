@@ -78,12 +78,12 @@ const updateMainJsResourcesPath = async(path, deployUrl) => {
 };
 
 const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
-const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
+const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build:sspa`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main-es2015");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
-const buildSspaApp = path => `cd ${getSspaPath(path)} && npm run build-prod`;
+const buildSspaApp = path => `cd ${getSspaPath(path)} && npm run build:sspa  && npm run postbuild:sspa`;
 const delSspaEmptyComp = path => {
   const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
