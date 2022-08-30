@@ -81,8 +81,10 @@ const updatePackageJson = (proj_path, sspaDeployUrl) => {
     ...pkg_json["scripts"],
     "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
     "postbuild:sspa": "node build-scripts/sspa-post-build.js",
-    "add-single-spa": "ng add single-spa-angular@4",
+    "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
   };
+  //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
+  pkg_json["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
 const updateTsConfigAppJson = proj_path => {

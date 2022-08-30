@@ -13,7 +13,8 @@ module.exports = (config, options) => {
     //separate css and js content separately. Remove ts from styles file
     var stylescss = singleSpaWebpackConfig.entry.styles;
     singleSpaWebpackConfig.entry.styles = stylescss.filter(e => !e.endsWith('.ts'));
-
+    singleSpaWebpackConfig.output.jsonpFunction = 'webpackJsonpangular-app';
+    delete singleSpaWebpackConfig.output.chunkLoadingGlobal;
     return singleSpaWebpackConfig;
 };
 `;

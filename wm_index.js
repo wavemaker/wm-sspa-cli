@@ -77,7 +77,7 @@ const updateMainJsResourcesPath = async(path, deployUrl) => {
     });
 };
 
-const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
+const installDeps = path => `cd ${getSspaPath(path)} && rm -rf package-lock.json && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build:sspa`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
