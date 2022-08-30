@@ -15,6 +15,14 @@ module.exports = (config, options) => {
     singleSpaWebpackConfig.entry.styles = stylescss.filter(e => !e.endsWith('.ts'));
     singleSpaWebpackConfig.output.jsonpFunction = 'webpackJsonpangular-app';
     delete singleSpaWebpackConfig.output.chunkLoadingGlobal;
+    //for webpack 5 - disables systemjs. we need this for webpack 4 wm11, ng12 projects
+    singleSpaWebpackConfig.module.rules.push(
+        {
+            parser: {
+              system: false, // disable SystemJS
+            },
+        }
+    )
     return singleSpaWebpackConfig;
 };
 `;

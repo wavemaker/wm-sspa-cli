@@ -76,17 +76,43 @@ const updatePackageJson = (proj_path, sspaDeployUrl) => {
     sspaDeployUrl =  'ng-bundle/'
   }
   const src_path = getPackageJsonPath(proj_path);
-  const pkg_json = JSON.parse(fs.readFileSync(src_path));
+  let pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
     "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
     "postbuild:sspa": "node build-scripts/sspa-post-build.js",
-    "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
   };
-  //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
-  pkg_json["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
+  pkg_json = getUpdatedPackageJSON(pkg_json);
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
+
+const getUpdatedPackageJSON = (pkgJson) => {
+    let packageJson = pkgJson;
+    console.log()
+    if(isOldProject(pkgJson)) {
+        //for ng 11 and less versions
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "add-single-spa": "ng add single-spa-angular@4",
+        };
+    } else {
+        //for ng 12 and more versions
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
+        };
+        //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
+        packageJson["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
+    }
+    return packageJson;
+}
+
+const isOldProject = (pkgJson) => {
+    let ngCliVersion = pkgJson["devDependencies"]["@angular/cli"];
+    let version = parseInt(ngCliVersion.split(".")[0]);
+    return version < 12;
+}
+
 const updateTsConfigAppJson = proj_path => {
   const src_path = getTsConfigAppJsonPath(proj_path);
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
