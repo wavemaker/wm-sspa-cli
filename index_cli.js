@@ -80,12 +80,24 @@ if (argv["help"] || argv["h"]) {
         return;
       }
     }
+    if (!argv["resource-hashing"] && !argv["r"]) {
+        argv = { ...argv };
+    } else {
+      argv["r"] = argv["r"].toLowerCase();
+      if(!['true', 'false'].includes(argv['r'])) {
+        printFailure(
+            `Invalid value passed to resource-hashing(-r) "${argv["resource-hashing"] || argv["r"]}". Please check\n`
+        );
+        return;
+      }
+    }
 
     process.env.VERBOSE = argv["verbose"];
     process.env.PROJECT_PATH = trimEnd(argv["project-path"] || argv["p"]);
     process.env.DEPLOY_URL = trimEnd(argv["deploy-url"] || argv["d"] || 'http://localhost:8080');
     process.env.LIBRARY_TARGET = argv["library-target"] || argv["l"] || 'umd';
     process.env.SPLIT_STYLES = argv["split-styles"] || argv["c"] || 'false';
+    process.env.RESOURCE_HASHING = argv["resource-hashing"] || argv["r"] || 'false';
     process.env.MOUNT_STYLES = argv["mount-styles"] || argv["m"] || 'true';
     process.env.SSPA_DEPLOY_URL = argv["sspa-deploy-url"] || argv["s"] || '';
     printCliHeader();
@@ -97,6 +109,7 @@ if (argv["help"] || argv["h"]) {
         process.env.SSPA_DEPLOY_URL,
         process.env.LIBRARY_TARGET,
         process.env.SPLIT_STYLES,
+        process.env.RESOURCE_HASHING,
         process.env.MOUNT_STYLES,
         process.env.VERBOSE
       );

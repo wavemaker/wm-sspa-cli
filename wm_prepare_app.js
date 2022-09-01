@@ -256,16 +256,10 @@ const updateExtraWebpack = proj_path => {
     fs.writeFileSync(path, getSSPACustomWebpackTemplate(), {encoding:'utf8',flag:'w'});
 };
 
-const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountStyles) => {
+const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountStyles, isHashingEnabled) => {
     deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
     sspaDeployUrl = sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl;
-    let styles = ['styles.{styles-hash}.css'];
-    if (splitStyles === 'true') {
-        styles.push('wm-theme-styles.{wm-theme-styles-hash}.css');
-        styles.push('wm-app-styles.{wm-app-styles-hash}.css');
-    } else {
-        styles.push('wm-styles.{wm-styles-hash}.css');
-    }
+    let styles = getStyles(splitStyles, isHashingEnabled);
     let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
     let envProdData = fs.readFileSync(envProdPath, "utf-8");
     const prodPropRegEx = /production: true/;
@@ -279,18 +273,40 @@ const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountS
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
+const getStyles = (splitStyles, isHashingEnabled) => {
+    let styles = [];
+    if(isHashingEnabled === 'true') {
+       styles.push('styles.{styles-hash}.css');
+        if (splitStyles === 'true') {
+            styles.push('wm-theme-styles.{wm-theme-styles-hash}.css');
+            styles.push('wm-app-styles.{wm-app-styles-hash}.css');
+        } else {
+            styles.push('wm-styles.{wm-styles-hash}.css');
+        }
+    } else{
+        styles.push('styles.css');
+        if (splitStyles === 'true') {
+            styles.push('wm-theme-styles.css');
+            styles.push('wm-app-styles.css');
+        } else {
+            styles.push('wm-styles.css');
+        }
+    }
+    return styles;
+}
+
 const addPostBuildScript = (projectPath) => {
     let path = node_path.resolve(`${getGeneratedApp(projectPath)}/build-scripts/sspa-post-build.js`);
     fs.writeFileSync(path, getSSPAPostBuildScriptTemplate(), {encoding:'utf8',flag:'w'});
 }
 
-const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles) => {
+const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, isHashingEnabled) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
   updateAppModuleWithPrefabUrls(projectPath);
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
-  updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles);
+  updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles, isHashingEnabled);
   addPostBuildScript(projectPath);
 };
 module.exports = {
