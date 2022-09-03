@@ -77,7 +77,8 @@ const updateMainJsResourcesPath = async(path, deployUrl) => {
     });
 };
 
-const installDeps = path => `cd ${getSspaPath(path)} && rm -rf package-lock.json && npm i`;
+const goToPath = path => `cd ${getSspaPath(path)}`;
+const installDependencies = path => `cd ${getSspaPath(path)} && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build:sspa`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
@@ -88,7 +89,12 @@ const delSspaEmptyComp = path => {
   const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
 };
-
+const installDeps = async projectPath => {
+    await exec(goToPath(projectPath));
+    const file = node_path.resolve(`${getSspaPath(projectPath)}/package-lock.json`);
+    rimraf.sync(file);
+    await exec(installDependencies(projectPath));
+}
 const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, isHashingEnabled, mountStyles, verbose) => {
   
   updateStatus(`Preparing project               `);
@@ -102,7 +108,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   updatePackageJson(projectPath, isHashingEnabled, sspaDeployUrl);
 
   updateStatus(`Installing Dependencies   `);
-  await exec(installDeps(projectPath));
+  await installDeps(projectPath)
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
@@ -112,7 +118,7 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   await updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, isHashingEnabled);
 
   updateStatus(`Installing Single-SPA Dependencies   `);
-  await exec(installDeps(projectPath));
+  await exec(installDependencies(projectPath));
 
   updateStatus(`Building for Single-Spa               `);
   await exec(buildSspaApp(projectPath, isHashingEnabled));
