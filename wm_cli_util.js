@@ -55,15 +55,15 @@ const printCliHeader = () => {
   log(textHead(`\n# Usage Examples #`));
   log(
     textHead(`npx @wavemaker/wm-sspa-cli`),
-    text(` --project-path <local_project_path> --deploy-url <deploy_url> --sspa-deploy-url <sspa_deploy_url> --library-target <umd/system> --split-styles <true/false> --mount-styles <true/false>`)
+    text(` --project-path <local_project_path> --deploy-url <deploy_url> --sspa-deploy-url <sspa_deploy_url> --library-target <umd/system> --split-styles <true/false> --resource-hashing <true/false> --mount-styles <true/false>`)
   );
   log(
     textHead(`npx @wavemaker/wm-sspa-cli`),
-    text(` -p <local_project_path> -d <deploy_url> -s <sspa_deploy_url> -l umd -c false -m true`)
+    text(` -p <local_project_path> -d <deploy_url> -s <sspa_deploy_url> -l umd -c false -m true -h true`)
   );
   log(
     textHead(`Optional Params`),
-    text(`library-target(-l : umd), split-styles(-c : false) & mount-styles(-m : true) take these specified default values if you don't specify anything`)
+    text(`library-target(-l : umd), split-styles(-c : false), resource-hashing(-r : false) & mount-styles(-m : true) take these specified default values if you don't specify anything`)
   );
   log("\n");
   isCompatibleVersion();
@@ -73,6 +73,7 @@ const printCliHeader = () => {
       log(text(`Library Target(-l)(Default - umd) - umd, system: `),textHead(process.env.LIBRARY_TARGET));
       log(text(`Split Styles(-c)(Default - false, don't split) - This will generate(when true) Base, Theme & App styles separately(styles,wm-theme-styles,wm-app-styles): `),textHead(process.env.SPLIT_STYLES));
       log(text(`Mount Styles(-m)(Default - true, client will handle mounting) - Incase, user wants to handle the mounting of styles: `),textHead(process.env.MOUNT_STYLES));
+      log(text(`Resource Hashing(-r)(Default - false, hashing the resources) - Hashing of the js and css files: `),textHead(process.env.RESOURCE_HASHING));
       log(text(`SSPA Deployed URL(-s) - Required to download apps static content: `),textHead(process.env.SSPA_DEPLOY_URL));
       log("\n");
   }

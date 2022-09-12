@@ -77,19 +77,25 @@ const updateMainJsResourcesPath = async(path, deployUrl) => {
     });
 };
 
-const installDeps = path => `cd ${getSspaPath(path)} && npm i`;
+const goToPath = path => `cd ${getSspaPath(path)}`;
+const installDependencies = path => `cd ${getSspaPath(path)} && npm i`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build:sspa`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
 const copyMain = async path => await copyFileToBundle(path, "main-es2015");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
-const buildSspaApp = path => `cd ${getSspaPath(path)} && npm run build:sspa  && npm run postbuild:sspa`;
+const buildSspaApp = (path, isHashingEnabled) => isHashingEnabled === 'true' ? `cd ${getSspaPath(path)} && npm run build:sspa  && npm run postbuild:sspa` : `cd ${getSspaPath(path)} && npm run build:sspa`;
 const delSspaEmptyComp = path => {
   const compPath = node_path.resolve(`${getSspaPath(path)}/src/app/empty-route`);
   rimraf.sync(compPath);
 };
-
-const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, verbose) => {
+const installDeps = async projectPath => {
+    await exec(goToPath(projectPath));
+    const file = node_path.resolve(`${getSspaPath(projectPath)}/package-lock.json`);
+    rimraf.sync(file);
+    await exec(installDependencies(projectPath));
+}
+const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, isHashingEnabled, mountStyles, verbose) => {
   
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
@@ -99,23 +105,23 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
 
   updateStatus(`Updating WaveMaker App         `);
   await prepareApp(projectPath, deployUrl);
-  updatePackageJson(projectPath, sspaDeployUrl);
+  updatePackageJson(projectPath, isHashingEnabled, sspaDeployUrl);
 
   updateStatus(`Installing Dependencies   `);
-  await exec(installDeps(projectPath));
+  await installDeps(projectPath)
 
   updateStatus(`Adding Single-spa schematics   `);
   await exec(addSspa(projectPath));
 
   replaceAngularJson(projectPath, splitStyles, libraryTarget);
   updateTsConfigAppJson(projectPath);
-  await updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles);
+  await updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, isHashingEnabled);
 
   updateStatus(`Installing Single-SPA Dependencies   `);
-  await exec(installDeps(projectPath));
+  await exec(installDependencies(projectPath));
 
   updateStatus(`Building for Single-Spa               `);
-  await exec(buildSspaApp(projectPath));
+  await exec(buildSspaApp(projectPath, isHashingEnabled));
 
   updateStatus(`Copying Final Files          `);
   await copyDistFolder(projectPath)

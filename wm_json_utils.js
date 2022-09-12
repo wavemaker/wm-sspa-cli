@@ -71,20 +71,63 @@ const updateWebpackConfig = proj_path => {
   // var newConfig = webpackConfig.replace(/\/\/ Feel free to modify this webpack config however you'd like to/gim, 'singleSpaWebpackConfig.module.rules.push({parser: {system: true}})');
   // fs.writeFileSync(src_path, newConfig, "utf-8");
 };
-const updatePackageJson = (proj_path, sspaDeployUrl) => {
+const updatePackageJson = (proj_path, isHashingEnabled, sspaDeployUrl) => {
   if(!sspaDeployUrl || sspaDeployUrl == 'undefined'){
     sspaDeployUrl =  'ng-bundle/'
   }
   const src_path = getPackageJsonPath(proj_path);
-  const pkg_json = JSON.parse(fs.readFileSync(src_path));
+  let pkg_json = JSON.parse(fs.readFileSync(src_path));
   pkg_json["scripts"] = {
     ...pkg_json["scripts"],
-    "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
-    "postbuild:sspa": "node build-scripts/sspa-post-build.js",
-    "add-single-spa": "ng add single-spa-angular@4",
   };
+  pkg_json = addSSPABuildTarget(pkg_json, isHashingEnabled, sspaDeployUrl);
+  pkg_json = addSSPASchematics(pkg_json);
   fs.writeFileSync(src_path, JSON.stringify(pkg_json, null, 4), "utf-8");
 }
+
+const addSSPABuildTarget = (pkgJson, isHashingEnabled, sspaDeployUrl) => {
+    let packageJson = pkgJson;
+    if(isHashingEnabled === 'true') {
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
+            "postbuild:sspa": "node build-scripts/sspa-post-build.js",
+        };
+    } else {
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "build:sspa": "ng build --c=production -- --deploy-url " + sspaDeployUrl,
+        };
+    }
+    return packageJson;
+}
+
+const addSSPASchematics = (pkgJson) => {
+    let packageJson = pkgJson;
+    if(isOldProject(pkgJson)) {
+        //for ng 11 and less versions
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "add-single-spa": "ng add single-spa-angular@4",
+        };
+    } else {
+        //for ng 12 and more versions
+        packageJson["scripts"] = {
+            ...packageJson["scripts"],
+            "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
+        };
+        //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
+        packageJson["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
+    }
+    return packageJson;
+}
+
+const isOldProject = (pkgJson) => {
+    let ngCliVersion = pkgJson["devDependencies"]["@angular/cli"];
+    let version = parseInt(ngCliVersion.split(".")[0]);
+    return version < 12;
+}
+
 const updateTsConfigAppJson = proj_path => {
   const src_path = getTsConfigAppJsonPath(proj_path);
   const pkg_json = JSON.parse(fs.readFileSync(src_path));
