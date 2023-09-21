@@ -54,9 +54,11 @@ const updateInterceptor = data => `
 export class WMInterceptor implements HttpInterceptor {
      WM_REDIRECTS = [
         "/services",
+        "/prefabs",
         "/resources",
         "resources/",
         "./services/",
+        "./prefabs/",
         "ng-bundle",
         "j_spring_security_check",
         "/j_spring_security_check"
