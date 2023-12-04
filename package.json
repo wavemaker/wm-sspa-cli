@@ -1,6 +1,6 @@
 {
   "name": "@wavemaker/wm-sspa-cli",
-  "version": "3.0.7",
+  "version": "4.0.0",
   "description": "A CLI to convert WaveMaker apps to Single-Spa compatible apps",
   "main": "index.js",
   "files": [
@@ -36,9 +36,14 @@
   },
   "devDependencies": {
     "brotli-webpack-plugin": "1.1.0",
-    "compression-webpack-plugin": "4.0.1",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11",
-    "webpack-node-externals": "^1.7.2"
-  }
+    "compression-webpack-plugin": "10.0.0",
+    "webpack": "5.76.1",
+    "webpack-cli": "5.1.4",
+    "webpack-node-externals": "3.0.0"
+  },
+  "engines": {
+    "node": ">=18.16.1",
+    "npm": ">=9.5.1"
+  },
+  "engineStrict": true
 }

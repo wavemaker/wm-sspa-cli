@@ -90,13 +90,13 @@ const addSSPABuildTarget = (pkgJson, isHashingEnabled, sspaDeployUrl) => {
     if(isHashingEnabled === 'true') {
         packageJson["scripts"] = {
             ...packageJson["scripts"],
-            "build:sspa": "ng build --c=production --  --output-hashing bundles --deploy-url " + sspaDeployUrl,
+            "build:sspa": "ng build --c=production --output-hashing bundles --deploy-url " + sspaDeployUrl,
             "postbuild:sspa": "node build-scripts/sspa-post-build.js",
         };
     } else {
         packageJson["scripts"] = {
             ...packageJson["scripts"],
-            "build:sspa": "ng build --c=production -- --deploy-url " + sspaDeployUrl,
+            "build:sspa": "ng build --c=production --deploy-url " + sspaDeployUrl,
         };
     }
     return packageJson;
@@ -104,20 +104,27 @@ const addSSPABuildTarget = (pkgJson, isHashingEnabled, sspaDeployUrl) => {
 
 const addSSPASchematics = (pkgJson) => {
     let packageJson = pkgJson;
-    if(isOldProject(pkgJson)) {
-        //for ng 11 and less versions
+    if(isIvyProject(pkgJson)) {
         packageJson["scripts"] = {
             ...packageJson["scripts"],
-            "add-single-spa": "ng add single-spa-angular@4",
+            "add-single-spa": "ng add --skip-confirmation single-spa-angular@8",
         };
     } else {
-        //for ng 12 and more versions
-        packageJson["scripts"] = {
-            ...packageJson["scripts"],
-            "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
-        };
-        //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
-        packageJson["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
+        if(isOldProject(pkgJson)) {
+            //for ng 11 and less versions
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "add-single-spa": "ng add single-spa-angular@4",
+            };
+        } else {
+            //for ng 12 and more versions
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "add-single-spa": "ng add --skip-confirmation single-spa-angular@5",
+            };
+            //pkg_json["devDependencies"]["@angular-builders/custom-webpack"] = "12.1.3"
+            packageJson["devDependencies"]["@angular-devkit/build-angular"] = "0.1102.19"
+        }
     }
     return packageJson;
 }
@@ -126,6 +133,11 @@ const isOldProject = (pkgJson) => {
     let ngCliVersion = pkgJson["devDependencies"]["@angular/cli"];
     let version = parseInt(ngCliVersion.split(".")[0]);
     return version < 12;
+}
+const isIvyProject = (pkgJson) => {
+    let ngCliVersion = pkgJson["devDependencies"]["@angular/cli"];
+    let version = parseInt(ngCliVersion.split(".")[0]);
+    return version > 14;
 }
 
 const updateTsConfigAppJson = proj_path => {
