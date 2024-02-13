@@ -15,6 +15,9 @@ const replaceAngularJson = (proj_path, splitStyles, libraryTarget) => {
   const src_path = getAngularJsonPath(proj_path);
   const ng_json = JSON.parse(fs.readFileSync(src_path));
   const build_options = ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
+  if(process.env["BODA"] === "true") {
+      delete build_options["deployUrl"];
+  }
   const build_config = ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"];
   /* Disable Vendor Chunk */
   build_config["vendorChunk"] = false;
@@ -87,17 +90,32 @@ const updatePackageJson = (proj_path, isHashingEnabled, sspaDeployUrl) => {
 
 const addSSPABuildTarget = (pkgJson, isHashingEnabled, sspaDeployUrl) => {
     let packageJson = pkgJson;
-    if(isHashingEnabled === 'true') {
-        packageJson["scripts"] = {
-            ...packageJson["scripts"],
-            "build:sspa": "ng build --c=production --output-hashing bundles --deploy-url " + sspaDeployUrl,
-            "postbuild:sspa": "node build-scripts/sspa-post-build.js",
-        };
+    if(process.env["BODA"] === "true") {
+        if(isHashingEnabled === 'true') {
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "build:sspa": "ng build --c=production --output-hashing bundles",
+                "postbuild:sspa": "node build-scripts/sspa-post-build.js",
+            };
+        } else {
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "build:sspa": "ng build --c=production",
+            };
+        }
     } else {
-        packageJson["scripts"] = {
-            ...packageJson["scripts"],
-            "build:sspa": "ng build --c=production --deploy-url " + sspaDeployUrl,
-        };
+        if(isHashingEnabled === 'true') {
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "build:sspa": "ng build --c=production --output-hashing bundles --deploy-url " + sspaDeployUrl,
+                "postbuild:sspa": "node build-scripts/sspa-post-build.js",
+            };
+        } else {
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "build:sspa": "ng build --c=production --deploy-url " + sspaDeployUrl,
+            };
+        }
     }
     return packageJson;
 }

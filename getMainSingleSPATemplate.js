@@ -35,7 +35,9 @@ function unmountStyle(styleSheet) {
 function mountStyles() {
     if(isMountStylesEnabled) {
         styles.map(function(stylesheet) {
-            mountStyle(environment.sspaDeployUrl + '/' + stylesheet);    
+            let sspaDepUrl = environment.sspaDeployUrl;
+            sspaDepUrl = (sspaDepUrl.slice(-1) === "/" ? sspaDepUrl.slice(0, -1) : sspaDepUrl)
+            mountStyle(sspaDepUrl + '/' + stylesheet);    
         });
     }
 }
@@ -56,7 +58,8 @@ function mountWMAppProps(appName) {
 	} else {
         return new Promise((resolve, reject) => {
             let script = document.createElement('script');
-            script.src = environment.deployUrl + "/services/application/wmProperties.js";
+            let depUrl = (environment.deployUrl.slice(-1) === "/" ? environment.deployUrl.slice(0, -1) : environment.deployUrl)
+            script.src = depUrl + "/services/application/wmProperties.js";
             script.id = 'sspa-wm-script';
             script.type = 'text/javascript';
             script.async = false;
@@ -80,6 +83,24 @@ function unmountWMAppProps() {
     if (script != null) {
         head.removeChild(script);
     }
+}
+
+function addMetaTag() { 
+    let sspaDeployUrl = environment.sspaDeployUrl.slice(-1) === "/" ? environment.sspaDeployUrl : environment.sspaDeployUrl + "/";
+    
+    //this is required to download all the component chunks
+    __webpack_require__.p = sspaDeployUrl;
+    
+    //this is used to download all the static resources
+    let meta = document.createElement('meta');
+    meta.name = "cdnUrl";
+    meta.content = sspaDeployUrl;
+    document.head.appendChild(meta);
+}
+
+function deleteMetaTag() {
+    __webpack_require__.p = "";
+    document.querySelector("[name='cdnUrl']").remove()
 }
 
 function addToasterObserver() {
@@ -153,7 +174,18 @@ const lifecycles = singleSpaAngular({
 
 export const bootstrap = [
 	async (singleSpaProps) => {
-        await mountWMAppProps(singleSpaProps.name).then(props => window._WM_APP_PROPERTIES = props);
+        let appName = singleSpaProps.name;
+        if(typeof WM_APPS_META != 'undefined') {
+            environment.deployUrl = WM_APPS_META[appName]["deployUrl"]
+            environment.sspaDeployUrl = WM_APPS_META[appName]["sspaDeployUrl"]
+        }
+        addMetaTag();
+        await mountWMAppProps(singleSpaProps.name).then((props) => {
+            window._WM_APP_PROPERTIES = props;
+            window._WM_APP_PROPERTIES["appName"] = appName;
+            window._WM_APP_PROPERTIES["sspaDeployUrl"] = environment.sspaDeployUrl;
+            window._WM_APP_PROPERTIES["deployUrl"] = environment.deployUrl;
+        });
     },
 	lifecycles.bootstrap
 ];
@@ -173,6 +205,7 @@ export const unmount = [
             } else {
                 console.error("App with the name[" + singleSpaProps.name+ "] not found");
             }
+            deleteMetaTag();   
 			disconnectObservers();
             unmountStyles();
             unmountWMAppProps();   

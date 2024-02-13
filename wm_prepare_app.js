@@ -22,7 +22,13 @@ const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
 const getComponentName = value => getModuleName(value);
 const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
 
-const updateDeployUrl = (data, url) => `${getDeployUrlStmt(url)}\n${data}`;
+const updateDeployUrl = (data, url) => {
+    if(typeof url !== "undefined") {
+        return `${getDeployUrlStmt(url)}\n${data}`;
+    }
+    //url is not known in the case of BODA. so just return the input data
+    return `\n${data}`;
+};
 const updateImports = data => `
 import { Injectable } from '@angular/core';
 import { APP_BASE_HREF } from '@angular/common';
@@ -66,17 +72,19 @@ export class WMInterceptor implements HttpInterceptor {
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
       console.log("WM_SSPA_CLI | REQUEST | "+request.url);
         let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
-        let isPathMappingReq = request.url.startsWith("ng-bundle/path_mapping.json");
+        let isPathMappingReq = request.url.indexOf("path_mapping.json") !== -1;
+        //@ts-ignore
+        let deployUrl = _WM_APP_PROPERTIES.deployUrl;
         if (redirectToWm) {
             request = request.clone({url:deployUrl+'/'+request.url});
         }
         if (isPathMappingReq) {
-            return next.handle(request).pipe(map(resp => {
-                if (resp instanceof HttpResponse) {
-                    let clResp = resp.clone({ body: {} });
-                    return clResp;
-                }
-            }));
+            //just return empty data for path_mapping json request as all the files are 
+            // already merged into scripts.js
+            return new Observable(observer => {
+                observer.next(new HttpResponse({ status: 200, body: {} }));
+                observer.complete();
+            });
         } 
         return next.handle(request);
     }
@@ -86,7 +94,17 @@ export class WMInterceptor implements HttpInterceptor {
 
 const updateAppModuleProviders = data => {
   let provRegex = /providers(\s)*:(\s)*\[/;
-  let sInterceptor = `providers: [\n{provide: HTTP_INTERCEPTORS, useClass:WMInterceptor, multi: true},`;
+  let sInterceptor = `providers: [\n
+  {
+    provide: HTTP_INTERCEPTORS, 
+    useClass:WMInterceptor, 
+    multi: true
+  },\n
+  {
+   provide: APP_INITIALIZER,
+   useFactory: downloadPrefabsScripts,
+   multi: true
+  },\n`;
   data = data.replace(provRegex, sInterceptor);
   return data;
 };
@@ -227,14 +245,20 @@ const updateAppModuleWithPrefabUrls = proj_path => {
         let prefabPattern = /(export const isPrefabInitialized = initPrefabConfig\(\);)/ig;
         let prefabUrlsTemplate = `
         import { getPrefabConfig } from '../framework/util/page-util';
-        let prefabBaseUrl = deployUrl + "/app/prefabs";
-        let usedPrefabs = ${prefabsStr};
-        usedPrefabs.forEach(function(prefabName){
-            let prefabConfig = getPrefabConfig(prefabName);
-            let prefabUrl = prefabBaseUrl + "/" + prefabName;
-            prefabConfig.resources.scripts = prefabConfig.resources.scripts.map(script => prefabUrl + script)
-            prefabConfig.resources.styles = prefabConfig.resources.styles.map(style => prefabUrl + style)
-        });
+        import { APP_INITIALIZER } from '@angular/core';
+        export function downloadPrefabsScripts() {
+            return () => {
+                //@ts-ignore
+                let prefabBaseUrl = _WM_APP_PROPERTIES.deployUrl + "/app/prefabs";
+                let usedPrefabs = ${prefabsStr};
+                usedPrefabs.forEach(function(prefabName){
+                    let prefabConfig = getPrefabConfig(prefabName);
+                    let prefabUrl = prefabBaseUrl + "/" + prefabName;
+                    prefabConfig.resources.scripts = prefabConfig.resources.scripts.map(script => prefabUrl + script)
+                    prefabConfig.resources.styles = prefabConfig.resources.styles.map(style => prefabUrl + style)
+                });
+            };
+        }
         `;
         moduleData = moduleData.replace(prefabPattern, "$1\n" + prefabUrlsTemplate);
         fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
@@ -259,19 +283,32 @@ const updateExtraWebpack = proj_path => {
 };
 
 const updateEnvFiles = (proj_path, deployUrl, sspaDeployUrl, splitStyles, mountStyles, isHashingEnabled) => {
-    deployUrl = deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl;
-    sspaDeployUrl = sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl;
     let styles = getStyles(splitStyles, isHashingEnabled);
     let envProdPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.prod.ts`);
     let envProdData = fs.readFileSync(envProdPath, "utf-8");
     const prodPropRegEx = /production: true/;
-    envProdData = envProdData.replace(prodPropRegEx, `production: true, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+
+    let isBodaEnabled = process.env["BODA"] === "true";
+
+    if(!isBodaEnabled) {
+        deployUrl = deployUrl ? (deployUrl.slice(-1)==='/'?deployUrl.slice(0,-1):deployUrl) : "";
+        sspaDeployUrl = sspaDeployUrl ? (sspaDeployUrl.slice(-1)==='/'?sspaDeployUrl.slice(0,-1):sspaDeployUrl) : "";
+    }
+    if(isBodaEnabled) {
+        envProdData = envProdData.replace(prodPropRegEx, `production: true, splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+    } else {
+        envProdData = envProdData.replace(prodPropRegEx, `production: true, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+    }
     fs.writeFileSync(envProdPath, envProdData, "utf-8");
 
     let envDevPath = node_path.resolve(`${getGeneratedApp(proj_path)}/src/environments/environment.dev.ts`);
     let envDevData = fs.readFileSync(envProdPath, "utf-8");
     const devPropRegEx = /production: false/;
-    envDevData = envDevData.replace(devPropRegEx, `production: false, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+    if(isBodaEnabled) {
+        envDevData = envDevData.replace(devPropRegEx, `production: false, splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+    } else {
+        envDevData = envDevData.replace(devPropRegEx, `production: false, deployUrl: "${deployUrl}", sspaDeployUrl: "${sspaDeployUrl}", splitStyles: ${splitStyles}, mountStyles: ${mountStyles}, styles: "${styles}"`);
+    }
     fs.writeFileSync(envDevPath, envDevData, "utf-8");
 };
 
