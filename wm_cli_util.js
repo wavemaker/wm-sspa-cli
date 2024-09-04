@@ -66,7 +66,7 @@ const printCliHeader = () => {
     text(`library-target(-l : umd), split-styles(-c : false), resource-hashing(-r : false) & mount-styles(-m : true) take these specified default values if you don't specify anything`)
   );
   log("\n");
-  isCompatibleVersion();
+  //isCompatibleVersion();
   if(process.env.PROJECT_PATH && process.env.DEPLOY_URL) {
       log(text(`Project Location(-p): `),textHead(process.env.PROJECT_PATH));
       log(text(`Deployed URL(-d) - Where to make the backend calls: `),textHead(process.env.DEPLOY_URL));

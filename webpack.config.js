@@ -8,6 +8,5 @@ module.exports = {
         filename: `wm_bundle.js`
     },
     target: `node`,
-    externals: [nodeExternals()],
-    mode: `production`
+    externals: [nodeExternals()]
 }
