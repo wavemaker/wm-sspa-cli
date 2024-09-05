@@ -176,22 +176,31 @@ const updateRoutes = async path => {
 };
 
 const updateMarkUp = async path => {
-  let pagesConfig = JSON.parse(
-    fs.readFileSync(getPagesConfigPath(path), "utf8")
-  );
-  pagesConfig = pagesConfig.map(p => {
-    let filePath = node_path.resolve(
-      `${getSspaPath(path)}/src/app/${
-        p.type === "PAGE" ? "pages" : "partials"
-      }/${p.name}/${p.name}.component.html`
-    );
-    let content = fs.readFileSync(filePath, "utf8");
-    fs.writeFileSync(
-      filePath,
-      content.replace(/scripts-to-load="(_|-|\.|[a-z]|,)*"/g, ""),
-      "utf8"
-    );
-  });
+    let dirList = ['pages', 'partials', 'prefabs'];
+    let rootDir = `${getSspaPath(path)}/src/app`;
+    dirList.forEach(directory => {
+        let dirPath = `${rootDir}/${directory}`;
+        try {
+            fs.accessSync(dirPath, fs.constants.F_OK | fs.constants.R_OK);
+            const items = fs.readdirSync(dirPath);
+            items.forEach(dir => {
+                const itemPath = node_path.join(dirPath, dir);
+                const stats = fs.statSync(itemPath);
+                if (stats.isDirectory()) {
+                    let filePath = `${itemPath}/${dir}.component.html`;
+                    let content = fs.readFileSync(filePath, "utf8");
+                    fs.writeFileSync(
+                        filePath,
+                        content.replace(/scripts-to-load="(_|-|\.|[a-z]|,)*"/g, ""),
+                        "utf8"
+                    );
+                }
+            });
+        } catch (err) {
+            //don't do anything and continue with the other folders
+            //console.info(`${directory} not present and returned with ${err}`);
+        }
+    });
 };
 const updateEmptyCompImport = data =>
   `import { EmptyRouteComponent } from "./empty-route/empty-route.component";\n ${data}`;
