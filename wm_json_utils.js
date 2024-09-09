@@ -123,10 +123,19 @@ const addSSPABuildTarget = (pkgJson, isHashingEnabled, sspaDeployUrl) => {
 const addSSPASchematics = (pkgJson) => {
     let packageJson = pkgJson;
     if(isIvyProject(pkgJson)) {
-        packageJson["scripts"] = {
-            ...packageJson["scripts"],
-            "add-single-spa": "ng add --skip-confirmation single-spa-angular@8",
-        };
+        let ngMajorVersion = getAngularVersion(pkgJson);
+        if(ngMajorVersion === 17) {
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "add-single-spa": "ng add --skip-confirmation single-spa-angular@9",
+            };
+        } else {
+            // for older angular projects (15)
+            packageJson["scripts"] = {
+                ...packageJson["scripts"],
+                "add-single-spa": "ng add --skip-confirmation single-spa-angular@8",
+            };
+        }
     } else {
         if(isOldProject(pkgJson)) {
             //for ng 11 and less versions
@@ -153,9 +162,12 @@ const isOldProject = (pkgJson) => {
     return version < 12;
 }
 const isIvyProject = (pkgJson) => {
+    return getAngularVersion(pkgJson) > 14;
+}
+
+const getAngularVersion = (pkgJson) => {
     let ngCliVersion = pkgJson["devDependencies"]["@angular/cli"];
-    let version = parseInt(ngCliVersion.split(".")[0]);
-    return version > 14;
+    return parseInt(ngCliVersion.split(".")[0]);
 }
 
 const updateTsConfigAppJson = proj_path => {
