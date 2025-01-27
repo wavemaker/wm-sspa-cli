@@ -15,6 +15,7 @@ const replaceAngularJson = (proj_path, splitStyles, libraryTarget) => {
   const src_path = getAngularJsonPath(proj_path);
   const ng_json = JSON.parse(fs.readFileSync(src_path));
   const build_options = ng_json["projects"]["angular-app"]["architect"]["build"]["options"];
+  build_options["outputPath"] = 'dist/ng-bundle';
   if(process.env["PORTABLE_BUILD"] === "true") {
       delete build_options["deployUrl"];
   }
