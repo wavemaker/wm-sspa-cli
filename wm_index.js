@@ -78,11 +78,11 @@ const updateMainJsResourcesPath = async(path, deployUrl) => {
 };
 
 const goToPath = path => `cd ${getSspaPath(path)}`;
-const installDependencies = path => `cd ${getSspaPath(path)} && npm i`;
+const installDependencies = path => `cd ${getSspaPath(path)} && npm i && npm i acorn@8.14.0 --save-dev`;
 const buildNgApp = path => `cd ${getSspaPath(path)} && npm run build:sspa`;
 const copyScripts = async path => await copyFileToBundle(path, "scripts");
 const copyStyles = async path => await copyFileToBundle(path, "styles");
-const copyMain = async path => await copyFileToBundle(path, "main-es2015");
+const copyMain = async path => await copyFileToBundle(path, "main");
 const addSspa = path => `cd ${getSspaPath(path)} && npm run add-single-spa`;
 const buildSspaApp = (path, isHashingEnabled) => isHashingEnabled === 'true' ? `cd ${getSspaPath(path)} && npm run build:sspa  && npm run postbuild:sspa` : `cd ${getSspaPath(path)} && npm run build:sspa`;
 const delSspaEmptyComp = path => {

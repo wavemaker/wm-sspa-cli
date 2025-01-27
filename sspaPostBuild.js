@@ -32,7 +32,7 @@ const addStyleHash = () => {
 }
 
 const replaceCssHash = async () => {
-	const mainFile = fs.readdirSync(opPath).filter(file => file.startsWith("main-es2015"))[0];
+	const mainFile = fs.readdirSync(opPath).filter(file => file.startsWith("main"))[0];
 	const mainContent = await readFile(opPath + "/" + mainFile);
 	let content = mainContent.toString();
 	for (let placeHolder in styleHashMap) {
