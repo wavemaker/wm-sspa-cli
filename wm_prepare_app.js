@@ -65,11 +65,16 @@ export class WMInterceptor implements HttpInterceptor {
         "resources/",
         "./services/",
         "./prefabs/",
+        "./resources",
         "ng-bundle",
         "j_spring_security_check",
         "/j_spring_security_check"
     ];
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
+      function normalizePath(path) {
+        return path.replace(/^(\\.\\/)+/, "./");
+      }
+      request = request.clone({url:normalizePath(request.url)});
       console.log("WM_SSPA_CLI | REQUEST | "+request.url);
         let redirectToWm = this.WM_REDIRECTS.some((url)=>request.url.startsWith(url));
         let isPathMappingReq = request.url.indexOf("path_mapping.json") !== -1;
@@ -245,7 +250,6 @@ const updateDeclarations = data => {
 };
 
 const updateAppModuleWithPrefabUrls = proj_path => {
-    console.log("----proj_path---", proj_path)
     let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
     getPrefabsUsedInApp(proj_path).then(function(prefabs) {
         const prefabsStr = prefabs.length ? `["${prefabs.join('", "')}"]` : '[]';
