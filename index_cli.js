@@ -6,7 +6,7 @@ const {
   printCliHeader,
   printFailure
 } = require("./wm_cli_util");
-const { generateSspaBundle } = require("./wm_index");
+const { invokeMaven, generateSspaBundle } = require("./wm_index");
 
 /*
  * CLUI Settings
@@ -168,6 +168,7 @@ if (argv["help"] || argv["h"]) {
     printCliHeader();
     initStatus();
     try {
+      await invokeMaven(process.env.PROJECT_PATH);
       await generateSspaBundle(
         process.env.PROJECT_PATH,
         process.env.DEPLOY_URL,
