@@ -30,7 +30,7 @@ const getProjVersion = path => {
 
 const execNpmInstall = async path => {
     let codegenCmd = `cd ${getCodegenPath(path)} && npm i`;
-    await execCommand(codegenCmd).catch((err) => console.error(`Something went wrong while running command ${codegenCmd}`, err));
+    await execCommand(codegenCmd).catch((err) => { console.error(`Something went wrong while running command ${codegenCmd}`, err) });
 }
 
 const getCodegenPackageName = ()=>{
@@ -39,12 +39,12 @@ const getCodegenPackageName = ()=>{
 
 const installCodegen = async (path) => {
     let codegenCmd = `npm install --legacy-peer-deps=true --prefix ${path} --no-save ${getCodegenPackageName()}@${getProjVersion(path)}`;
-    await execCommand(codegenCmd).catch((err) => console.error(`Something went wrong while running command ${codegenCmd}`, err));
+    await execCommand(codegenCmd).catch((err) => { console.error(`Something went wrong while running command ${codegenCmd}`, err) });
 }
 const execCodegenCli = async (codegenPath, projectPath) => {
     let angularCodegenPath = getCodegenPath(codegenPath);
     let codegenCliCmd = `node ${getCodegenCliPath(codegenPath)} -s ${node_path.resolve(projectPath)} -t ${getGeneratedApp(projectPath)} --codegenPath=${angularCodegenPath}`
-    await execCommand(codegenCliCmd).catch((err) => console.error(`Something went wrong while running command ${codegenCliCmd}`, err));
+    await execCommand(codegenCliCmd).catch((err) => { console.error(`Something went wrong while running command ${codegenCliCmd}`, err) });
 }
 const execCodegen = async (codegenPath, projectPath) => {
     await execNpmInstall(codegenPath);
