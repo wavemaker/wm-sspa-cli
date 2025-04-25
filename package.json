@@ -1,6 +1,6 @@
 {
   "name": "@wavemaker/wm-sspa-cli",
-  "version": "5.2.0",
+  "version": "5.2.2",
   "description": "A CLI to convert WaveMaker apps to Single-Spa compatible apps",
   "main": "index.js",
   "files": [
