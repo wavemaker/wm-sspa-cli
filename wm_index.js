@@ -100,7 +100,7 @@ const installDeps = async projectPath => {
 const invokeMaven = async (projectPath) => {
     updateStatus(`Invoking Maven               `);
     let isPublicApp = getProjVersion(projectPath).indexOf("next") === -1;
-    let mvnCommand = isPublicApp ? `mvn clean process-classes` : `mvn clean process-classes -Pwavemaker-internal`;
+    let mvnCommand = isPublicApp ? `mvn process-classes` : `mvn process-classes -Pwavemaker-internal`;
     let mvnCmd = `cd ${projectPath} && ${mvnCommand}`;
     await execCommand(mvnCmd).catch((err) => { console.error(`Something went wrong while running command ${mvnCmd}`, err) });
 };
