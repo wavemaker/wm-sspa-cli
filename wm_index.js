@@ -20,7 +20,6 @@
 const fs = require("fs");
 const node_path = require("path");
 const util = require("util");
-const exec = util.promisify(require("child_process").exec);
 const ncp = util.promisify(require("ncp").ncp);
 const rimraf = require("rimraf");
 const { updateStatus, printSuccess } = require("./wm_cli_util");
@@ -28,8 +27,8 @@ const { updateStatus, printSuccess } = require("./wm_cli_util");
 const { replaceAngularJson, updatePackageJson,updateTsConfigAppJson, updateWebpackConfig } = require("./wm_json_utils");
 const { prepareApp, updateApp } = require("./wm_prepare_app");
 
-const { getGeneratedApp, getBundlePath, getSspaPath } = require("./wm_utils");
-const { generateNgCode } = require("./wm_codegen_utils");
+const { getGeneratedApp, getBundlePath, getSspaPath, execCommand} = require("./wm_utils");
+const { getProjVersion, generateNgCode } = require("./wm_codegen_utils");
 // TODO: Verbose support | --verbose option
 const showResult = ({ stdout, stderr }) => {
   return;
@@ -90,13 +89,24 @@ const delSspaEmptyComp = path => {
   rimraf.sync(compPath);
 };
 const installDeps = async projectPath => {
-    await exec(goToPath(projectPath));
+    let chgPathCmd = goToPath(projectPath);
+    await execCommand(chgPathCmd).catch((err) => { console.error(`Something went wrong while running command ${chgPathCmd}`, err) });
+
     const file = node_path.resolve(`${getSspaPath(projectPath)}/package-lock.json`);
     rimraf.sync(file);
-    await exec(installDependencies(projectPath));
+    let installCmd = installDependencies(projectPath);
+    await execCommand(installCmd).catch((err) => { console.error(`Something went wrong while running command ${installCmd}`, err) });
 }
+const invokeMaven = async (projectPath) => {
+    updateStatus(`Invoking Maven               `);
+    let isPublicApp = getProjVersion(projectPath).indexOf("next") === -1;
+    let mvnCommand = isPublicApp ? `mvn process-classes` : `mvn process-classes -Pwavemaker-internal`;
+    let mvnCmd = `cd ${projectPath} && ${mvnCommand}`;
+    await execCommand(mvnCmd).catch((err) => { console.error(`Something went wrong while running command ${mvnCmd}`, err) });
+};
+
 const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, isHashingEnabled, mountStyles, verbose) => {
-  
+
   updateStatus(`Preparing project               `);
   await setupSspaProj(projectPath);
 
@@ -111,17 +121,20 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   await installDeps(projectPath)
 
   updateStatus(`Adding Single-spa schematics   `);
-  await exec(addSspa(projectPath));
+  let sspaCmd = addSspa(projectPath);
+  await execCommand(sspaCmd).catch((err) => { console.error(`Something went wrong while running command ${sspaCmd}`, err) });
 
   replaceAngularJson(projectPath, splitStyles, libraryTarget);
   updateTsConfigAppJson(projectPath);
   await updateApp(projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, isHashingEnabled);
 
   updateStatus(`Installing Single-SPA Dependencies   `);
-  await exec(installDependencies(projectPath));
+  let insCmd = installDependencies(projectPath);
+  await execCommand(insCmd).catch((err) => { console.error(`Something went wrong while running command ${insCmd}`, err) });
 
   updateStatus(`Building for Single-Spa               `);
-  await exec(buildSspaApp(projectPath, isHashingEnabled));
+  let buildSSpaCmd = buildSspaApp(projectPath, isHashingEnabled);
+  await execCommand(buildSSpaCmd).catch((err) => { console.error(`Something went wrong while running command ${buildSSpaCmd}`, err) });
 
   updateStatus(`Copying Final Files          `);
   await copyDistFolder(projectPath)
@@ -129,5 +142,6 @@ const generateSspaBundle = async (projectPath, deployUrl, sspaDeployUrl, library
   printSuccess(`Artifacts are generated at: ${getBundlePath(projectPath)}`);
 };
 module.exports = {
+  invokeMaven,
   generateSspaBundle
 };

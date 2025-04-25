@@ -16,10 +16,10 @@ const getPagesConfigPath = path =>
 const getRoutePath = path => node_path.resolve(`${getSspaPath(path)}/src/app`);
 const getRouteFile = () => `/app.routes.ts`;
 const getSspaRouteFile = () => `/sspa_app.routes.ts`;
-const getAppModuleFile = path =>
-  node_path.resolve(`${getRoutePath(path)}/app.module.ts`);
-const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
-const getComponentName = value => getModuleName(value);
+const getAppConfigFile = path =>
+  node_path.resolve(`${getRoutePath(path)}/app.config.ts`);
+// const getModuleName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
+const getComponentName = value => `${value[0].toUpperCase()}${value.substr(1)}`;
 const getDeployUrlStmt = url => `const deployUrl="${url || ""}"`;
 
 const updateDeployUrl = (data, url) => {
@@ -47,6 +47,9 @@ const updateRouteImport = data =>
     `import { routes } from './sspa_app.routes'`
   );
 const updateAppRoutingModule = data => `
+import { NgModule } from '@angular/core';
+import { RouterModule } from '@angular/router';
+
 @NgModule({
   imports:[RouterModule.forRoot(routes,{useHash:true, scrollPositionRestoration:'top'})],
   exports:[RouterModule],
@@ -97,7 +100,7 @@ export class WMInterceptor implements HttpInterceptor {
 \n${data}
 `;
 
-const updateAppModuleProviders = data => {
+const updateAppConfigProviders = data => {
   let provRegex = /providers(\s)*:(\s)*\[/;
   let sInterceptor = `providers: [\n
   {
@@ -113,89 +116,53 @@ const updateAppModuleProviders = data => {
   data = data.replace(provRegex, sInterceptor);
   return data;
 };
-const updateAppModuleImports = (data, path) => {
-  let impRegex = /imports(\s)*:(\s)*\[((\s)*(.)*(,))+/;
-  let impstr = data.match(impRegex)[0];
-  impstr = impstr.replace(/CommonModule/, "NgCommonModule");
-  impstr = impstr.replace(/RouterModule/, "AppRoutingModule");
+const updateAppConfigImports = (data, path) => {
   const pagesConfig = JSON.parse(
     fs.readFileSync(getPagesConfigPath(path), "utf-8")
   );
   const modules = [];
-  // When Dynamic components are used int he app, all the widgets are added to the app module and then we duplicate
+  // When Dynamic components are used in the app, all the widgets are added to the app module and then we duplicate
   // definitions of the modules with the same name. So creating an alias to avoid the conflicts. Prepending with Page/Partial
   // to the module name
   const conflictModules = ["Login", "header", "footer"];
   const moduleImports = pagesConfig.map(c => {
     if(conflictModules.includes(c.name)) {
-        modules.push(`${c.type === "PAGE" ? "Page" : "Partial"}${getModuleName(c.name)}Module`);
-        return `import { ${getModuleName(c.name)}Module as ${c.type === "PAGE" ? "Page" : "Partial"}${getModuleName(c.name)}Module } from "./${
+        modules.push(`${c.type === "PAGE" ? "Page" : "Partial"}${getComponentName(c.name)}Component`);
+        return `import { ${getComponentName(c.name)}Component as ${c.type === "PAGE" ? "Page" : "Partial"}${getComponentName(c.name)}Component } from "./${
             c.type === "PAGE" ? "pages" : "partials"
-            }/${c.name}/${c.name}.module"`;
+            }/${c.name}/${c.name}.component"`;
     } else {
-        modules.push(`${getModuleName(c.name)}Module`);
-        return `import { ${getModuleName(c.name)}Module } from "./${
+        modules.push(`${getComponentName(c.name)}Component`);
+        return `import { ${getComponentName(c.name)}Component } from "./${
             c.type === "PAGE" ? "pages" : "partials"
-            }/${c.name}/${c.name}.module"`
+            }/${c.name}/${c.name}.component"`
     }
   });
+  moduleImports.push("import { getSingleSpaExtraProviders } from 'single-spa-angular';");
   let modulesStr = modules.join(`,`);
-  impstr = impstr.replace(/WM_MODULES_FOR_ROOT,/, "WM_MODULES_FOR_ROOT,"+modulesStr+",");
 
-  data = data.replace(impRegex, impstr);
+  data = data.replace(/\.{3}wmModules/, "...wmModules, ...getSingleSpaExtraProviders()");
+  data = data.replace(/\.{3}getSingleSpaExtraProviders\(\)/, "...getSingleSpaExtraProviders(),"+modulesStr+",");
   return `${moduleImports.join(`\n`)}\n${data}`;
 };
 
-const updateAppModule = async (proj_path, url) => {
-  let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
-  moduleData = updateAppModuleProviders(moduleData);
-  moduleData = updateAppModuleImports(moduleData, proj_path);
+const updateAppConfig = async (proj_path, url) => {
+  let moduleData = fs.readFileSync(getAppConfigFile(proj_path), "utf-8");
+
+  moduleData = updateAppConfigProviders(moduleData);
+  moduleData = updateAppConfigImports(moduleData, proj_path);
   moduleData = updateAppRoutingModule(moduleData);
   moduleData = updateInterceptor(moduleData);
   moduleData = updateCommonModule(moduleData);
   moduleData = updateRouteImport(moduleData);
   moduleData = updateImports(moduleData);
   moduleData = updateDeployUrl(moduleData, url);
-  fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
+  fs.writeFileSync(getAppConfigFile(proj_path), moduleData, "utf-8");
 };
 
 const updateRoutes = async path => {
-
-  const pageStack = [];
-  const data = fs.readFileSync(getRoutePath(path) + getRouteFile(), "utf8");
-
-  let dataArr = data.split("\n");
-  let isLoadChildren = false;
-  for (let i = 0; i < dataArr.length; i++) {
-    let d = dataArr[i];
-    if (d.includes("path:")) {
-      let pageName = d.split(":")[1].trim();
-      pageName = pageName
-        .substr(1, pageName.length - 3)
-        .split("*")
-        .join("");
-      pageName && pageStack.push(pageName);
-    } else if (d.includes("loadChildren:")) {
-      isLoadChildren = true;
-      dataArr[i] = pageStack.length
-        ? `component:${getComponentName(
-            pageStack[pageStack.length - 1]
-          )}Component,`
-        : ``;
-    } else if (d.includes("{") || d.includes("}")) {
-      isLoadChildren = false;
-    } else if (isLoadChildren) {
-      dataArr[i] = "";
-    }
-  }
-  const pageImports = pageStack.map(
-    p =>
-      `import {${getComponentName(
-        p
-      )}Component} from "./pages/${p}/${p}.component"`
-  );
-  dataArr = [...pageImports, ...dataArr].join("\n");
-  fs.writeFileSync(getRoutePath(path) + getSspaRouteFile(), dataArr, "utf8");
+  const data = fs.readFileSync(node_path.join(getRoutePath(path), getRouteFile()), "utf8");
+  fs.writeFileSync(node_path.join(getRoutePath(path), getSspaRouteFile()), data, "utf8");
 };
 
 const updateMarkUp = async path => {
@@ -249,8 +216,8 @@ const updateDeclarations = data => {
   return data;
 };
 
-const updateAppModuleWithPrefabUrls = proj_path => {
-    let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
+const updateAppConfigWithPrefabUrls = proj_path => {
+    let moduleData = fs.readFileSync(getAppConfigFile(proj_path), "utf-8");
     getPrefabsUsedInApp(proj_path).then(function(prefabs) {
         const prefabsStr = prefabs.length ? `["${prefabs.join('", "')}"]` : '[]';
         let prefabPattern = /(export const isPrefabInitialized = initPrefabConfig\(\);)/ig;
@@ -273,15 +240,15 @@ const updateAppModuleWithPrefabUrls = proj_path => {
         }
         `;
         moduleData = moduleData.replace(prefabPattern, "$1\n" + prefabUrlsTemplate);
-        fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
+        fs.writeFileSync(getAppConfigFile(proj_path), moduleData, "utf-8");
     });
 };
 
 const addEmptyCompToApp = proj_path => {
-  let moduleData = fs.readFileSync(getAppModuleFile(proj_path), "utf-8");
+  let moduleData = fs.readFileSync(getAppConfigFile(proj_path), "utf-8");
   moduleData = updateDeclarations(moduleData);
   moduleData = updateEmptyCompImport(moduleData);
-  fs.writeFileSync(getAppModuleFile(proj_path), moduleData, "utf-8");
+  fs.writeFileSync(getAppConfigFile(proj_path), moduleData, "utf-8");
 };
 
 const updateMainSingleSPA = proj_path => {
@@ -354,7 +321,7 @@ const addPostBuildScript = (projectPath) => {
 const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, splitStyles, mountStyles, isHashingEnabled) => {
   addEmptyCompToApp(projectPath);
   addEmptyCompToRoutes(projectPath);
-  updateAppModuleWithPrefabUrls(projectPath);
+  updateAppConfigWithPrefabUrls(projectPath);
   updateMainSingleSPA(projectPath);
   updateExtraWebpack(projectPath);
   updateEnvFiles(projectPath, deployUrl, sspaDeployUrl, splitStyles, mountStyles, isHashingEnabled);
@@ -363,7 +330,7 @@ const updateApp = async (projectPath, deployUrl, sspaDeployUrl, libraryTarget, s
 module.exports = {
   prepareApp: async (projectPath, deployUrl) => {
     await updateRoutes(projectPath);
-    await updateAppModule(projectPath, deployUrl);
+    await updateAppConfig(projectPath, deployUrl);
     await updateMarkUp(projectPath);
   },
   updateApp

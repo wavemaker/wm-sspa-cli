@@ -7,9 +7,52 @@ import { Router, NavigationStart } from '@angular/router';
 
 import { singleSpaAngular, getSingleSpaExtraProviders } from 'single-spa-angular';
 
-import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 import { singleSpaPropsSubject } from './single-spa/single-spa-props';
+
+import { bootstrapApplication } from '@angular/platform-browser';
+
+import { appConfig } from './app/app.config';
+import { AppComponent } from '@wm/runtime/base';
+
+import initWmProjectProperties from './app/wm-project-properties';
+import { WMAppProperties } from './app/wmProperties';
+import * as fontConfig from './font.config';
+
+let formatAcceptHeader = (languages: any) => {
+  let result: string[] = [];
+  let addedLanguages = new Set<string>(); // To track already added languages
+  let qValue = 1.0;
+
+  languages.forEach((lang: any) => {
+    if (!addedLanguages.has(lang)) {
+      // Add the full language (e.g., en-US or en) if not already added
+      result.push(\`\${lang}\${qValue === 1.0 ? '' : \`;q=\${qValue.toFixed(1)}\`}\`);
+      addedLanguages.add(lang);
+      // Decrease qValue for the next language
+      qValue = Math.max(0.1, qValue - 0.1); // Decrease qValue, minimum is 0.1
+    }
+
+    // If language has a region code (e.g., en-US), also add the base language (e.g., en)
+    if (lang.includes('-')) {
+      const baseLang = lang.split('-')[0];
+      if (!addedLanguages.has(baseLang)) {
+        result.push(\`\${baseLang};q=\${qValue.toFixed(1)}\`);
+        addedLanguages.add(baseLang);
+
+        // Decrease qValue for the next language
+        qValue = Math.max(0.1, qValue - 0.1);
+      }
+    }
+  });
+
+  return result.join(',');
+}
+WMAppProperties['preferredLanguage'] = formatAcceptHeader(navigator.languages);
+WMAppProperties['fontConfig'] = fontConfig;
+
+(window as any)._WM_APP_PROPERTIES  = WMAppProperties;
+initWmProjectProperties();
 
 var imgObserver, styles = environment.styles.split(","), isMountStylesEnabled = environment.mountStyles;
 
@@ -49,39 +92,9 @@ function unmountStyles() {
     }
 }
 
-function mountWMAppProps(appName) {
-	let wmProps = sessionStorage.getItem(appName + "-wmProps");
-	if(wmProps) {
-		return new Promise((resolve, reject) => {
-			return resolve(JSON.parse(wmProps));
-		})
-	} else {
-        return new Promise((resolve, reject) => {
-            let script = document.createElement('script');
-            let depUrl = (environment.deployUrl.slice(-1) === "/" ? environment.deployUrl.slice(0, -1) : environment.deployUrl)
-            script.src = depUrl + "/services/application/wmProperties.js";
-            script.id = 'sspa-wm-script';
-            script.type = 'text/javascript';
-            script.async = false;
-            script.charset = 'utf-8';
-            script.onload = () => {
-				sessionStorage.setItem(appName + "-wmProps", JSON.stringify(_WM_APP_PROPERTIES));
-                return resolve(_WM_APP_PROPERTIES);
-            }
-            document.getElementsByTagName('head')[0].appendChild(script);
-        })
-	} 
-}
-
 function unmountWMAppProps() {
     if(window[_WM_APP_PROPERTIES]) {
         window[_WM_APP_PROPERTIES] = null
-    }
-
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.getElementById('sspa-wm-script');
-    if (script != null) {
-        head.removeChild(script);
     }
 }
 
@@ -164,7 +177,7 @@ const lifecycles = singleSpaAngular({
     bootstrapFunction: (singleSpaProps) => {
 	    addObservers(singleSpaProps.name);
         singleSpaPropsSubject.next(singleSpaProps);
-        return platformBrowserDynamic(getSingleSpaExtraProviders()).bootstrapModule(AppModule);
+        return bootstrapApplication(AppComponent, appConfig);
     },
     template: '<app-root />',
     Router,
@@ -180,12 +193,11 @@ export const bootstrap = [
             environment.sspaDeployUrl = WM_APPS_META[appName]["sspaDeployUrl"]
         }
         addMetaTag();
-        await mountWMAppProps(singleSpaProps.name).then((props) => {
-            window._WM_APP_PROPERTIES = props;
-            window._WM_APP_PROPERTIES["appName"] = appName;
-            window._WM_APP_PROPERTIES["sspaDeployUrl"] = environment.sspaDeployUrl;
-            window._WM_APP_PROPERTIES["deployUrl"] = environment.deployUrl;
-        });
+
+        window._WM_APP_PROPERTIES["appName"] = appName;
+        window._WM_APP_PROPERTIES["sspaDeployUrl"] = environment.sspaDeployUrl;
+        window._WM_APP_PROPERTIES["deployUrl"] = environment.deployUrl;
+        
     },
 	lifecycles.bootstrap
 ];
