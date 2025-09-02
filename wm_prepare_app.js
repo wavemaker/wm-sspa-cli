@@ -61,21 +61,18 @@ export class AppRoutingModule{};
 const updateInterceptor = data => `
 @Injectable()
 export class WMInterceptor implements HttpInterceptor {
-     WM_REDIRECTS = [
-        "/services",
-        "/prefabs",
-        "/resources",
-        "resources/",
-        "./services/",
-        "./prefabs/",
-        "./resources",
+    WM_REDIRECTS = [
+        "services",
+        "prefabs",
+        "resources",
         "ng-bundle",
         "j_spring_security_check",
-        "/j_spring_security_check"
     ];
     intercept(request:HttpRequest<any>, next:HttpHandler):Observable<HttpEvent<any>> {
       function normalizePath(path) {
-        return path.replace(/^(\\.\\/)+/, "./");
+         if (!path) return path;
+         // Remove any number of leading ./ or ../ segments
+         return path.replace(/^(\\\\.{1,2}\\\\/)+/, "");
       }
       request = request.clone({url:normalizePath(request.url)});
       console.log("WM_SSPA_CLI | REQUEST | "+request.url);
