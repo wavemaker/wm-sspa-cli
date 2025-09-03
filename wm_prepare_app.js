@@ -72,7 +72,7 @@ export class WMInterceptor implements HttpInterceptor {
       function normalizePath(path) {
          if (!path) return path;
          // Remove any number of leading ./ or ../ segments
-         return path.replace(/^(\\\\.{1,2}\\\\/)+/, "");
+         return path.replace(/^((\\.{1,2}\\/)|\\/)+/, "");
       }
       request = request.clone({url:normalizePath(request.url)});
       console.log("WM_SSPA_CLI | REQUEST | "+request.url);
