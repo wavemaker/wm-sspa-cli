@@ -49,8 +49,26 @@ const createBundleFolder = path => {
 
 const copyDistFolder = async (path) => {
     const bundlePath = node_path.resolve(`${getSspaPath(path)}/dist/ng-bundle`);
+	let finalBundlePath = getSourceDir(bundlePath);
     const destPath = getBundlePath(path);
-    await ncp(bundlePath, destPath);
+    await ncp(finalBundlePath, destPath);
+}
+
+const getSourceDir = (bundleDir) => {
+	// list all entries inside bundle
+	const entries = fs.readdirSync(bundleDir);
+
+	// check if there's exactly one subfolder and nothing else
+	const dirs = entries.filter(entry =>
+		fs.statSync(node_path.join(bundleDir, entry)).isDirectory()
+	);
+
+	if (dirs.length === 1 && entries.length === 1) {
+		// New structure → use that single random folder
+		return node_path.join(bundleDir, dirs[0]);
+	}
+	// Old structure → bundle itself contains files
+	return bundleDir;
 }
 
 const copyFileToBundle = async (path, fileName) => {

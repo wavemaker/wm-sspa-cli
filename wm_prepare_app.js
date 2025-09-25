@@ -29,13 +29,23 @@ const updateDeployUrl = (data, url) => {
     //url is not known in the case of PORTABLE_BUILD. so just return the input data
     return `\n${data}`;
 };
-const updateImports = data => `
-import { Injectable } from '@angular/core';
-import { APP_BASE_HREF } from '@angular/common';
-import { HttpInterceptor, HttpRequest, HttpResponse, HttpHandler, HttpEvent, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-\n${data}`;
+const updateImports = (data) => {
+	let importsTemplate = `
+		import { Injectable } from '@angular/core';
+		import { APP_BASE_HREF } from '@angular/common';
+		import { HttpInterceptor, HttpRequest, HttpResponse, HttpHandler, HttpEvent, HTTP_INTERCEPTORS } from '@angular/common/http';
+		import { Observable } from 'rxjs';
+		import { map } from 'rxjs/operators';
+	`;
+	let httpInterceptorPresent = data.includes("withXsrfConfiguration, HTTP_INTERCEPTORS");
+	//to support older and newer versions after migrating to standalone
+	if(httpInterceptorPresent) {
+		data = data.replace(/withXsrfConfiguration, HTTP_INTERCEPTORS/ig, "withXsrfConfiguration");
+	}
+	return `
+		${importsTemplate}\n${data}
+	`;
+};
 const updateCommonModule = data =>
   data.replace(
     /import(\s)+{(\s)*CommonModule/,
@@ -215,7 +225,7 @@ const updateDeclarations = data => {
 
 const updateAppConfigWithPrefabUrls = proj_path => {
     let moduleData = fs.readFileSync(getAppConfigFile(proj_path), "utf-8");
-    getPrefabsUsedInApp(proj_path).then(function(prefabs) {
+	getPrefabsUsedInApp(proj_path).then(function(prefabs) {
         const prefabsStr = prefabs.length ? `["${prefabs.join('", "')}"]` : '[]';
         let prefabPattern = /(export const isPrefabInitialized = initPrefabConfig\(\);)/ig;
         let prefabUrlsTemplate = `
@@ -236,7 +246,12 @@ const updateAppConfigWithPrefabUrls = proj_path => {
             };
         }
         `;
-        moduleData = moduleData.replace(prefabPattern, "$1\n" + prefabUrlsTemplate);
+		moduleData = moduleData.replace(prefabPattern, "$1\n" + prefabUrlsTemplate);
+		let appInitializerPresent = moduleData.includes("APP_INITIALIZER, LOCALE_ID");
+		//to support older and newer versions after migrating to standalone
+		if(appInitializerPresent) {
+			moduleData = moduleData.replace(/import { APP_INITIALIZER }/ig, "//import { APP_INITIALIZER }");
+		}
         fs.writeFileSync(getAppConfigFile(proj_path), moduleData, "utf-8");
     });
 };
