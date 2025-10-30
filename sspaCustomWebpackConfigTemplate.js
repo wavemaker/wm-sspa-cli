@@ -14,14 +14,6 @@ module.exports = (config, options) => {
     var stylescss = singleSpaWebpackConfig.entry.styles;
     singleSpaWebpackConfig.entry.styles = stylescss.filter(e => !e.endsWith('.ts'));
     delete singleSpaWebpackConfig.output.chunkLoadingGlobal;
-    //for webpack 5 - disables systemjs. we need this for webpack 4 wm11, ng12 projects
-    singleSpaWebpackConfig.module.rules.push(
-        {
-            parser: {
-              system: false, // disable SystemJS
-            },
-        }
-    )
     return singleSpaWebpackConfig;
 };
 `;
