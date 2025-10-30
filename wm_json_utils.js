@@ -53,6 +53,8 @@ const replaceAngularJson = (proj_path, splitStyles, libraryTarget) => {
   /* Assign Updated Values */
   ng_json["projects"]["angular-app"]["architect"]["build"]["options"] = build_options;
   ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"] = build_config;
+  delete ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["production"]["customWebpackConfig"];
+  delete ng_json["projects"]["angular-app"]["architect"]["build"]["configurations"]["development"]["customWebpackConfig"];
   fs.writeFileSync(src_path, JSON.stringify(ng_json, null, 4), "utf-8");
 };
 const updateLibraryTarget = (proj_path, libraryTarget) => {
